@@ -16,6 +16,11 @@ dev:
 build:
 	pnpm build
 
+test:
+	pnpm vitest run
+
+verify: lint test build
+
 lint:
 	pnpm lint
 

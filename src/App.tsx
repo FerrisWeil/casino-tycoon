@@ -1,101 +1,108 @@
-import { useState } from "react";
-import { Coins, UserSquare, FlaskConical, Play } from "lucide-react";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { Coins, UserSquare, Hand } from "lucide-react";
 import { useGameStore } from "./store/useGameStore";
 import DesignLab from "./components/DesignLab/DesignLab";
+import DevShell from "./components/DevShell/DevShell";
+import CasinoFloor from "./components/CasinoFloor/CasinoFloor";
 
-function App() {
-	const { money, reputation, manualDeals, manualDeal } = useGameStore();
-	const [showDesignLab, setShowDesignLab] = useState(false);
+function GameView() {
+	const { money, reputation, manualDeal } = useGameStore();
+	const location = useLocation();
+	const [isDevMode, setIsDevMode] = useState(false);
 
-	if (showDesignLab) {
-		return (
-			<div
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					alignItems: "center",
-					gap: "1rem",
-				}}
-			>
-				<button onClick={() => setShowDesignLab(false)} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-					<Play size={16} /> Back to Game
-				</button>
-				<DesignLab />
-			</div>
-		);
-	}
+	useEffect(() => {
+		const params = new URLSearchParams(location.search);
+		if (params.get("dev") === "true") {
+			setIsDevMode(true);
+		}
+	}, [location.search]);
 
-	return (
+	const content = (
 		<div
 			style={{
-				display: "flex",
-				flexDirection: "column",
-				gap: "2rem",
-				alignItems: "center",
+				position: "relative",
+				width: "100vw",
+				height: "100vh",
+				overflow: "hidden",
 			}}
 		>
-			<div
+			{/* Floating HUD */}
+			<header
 				style={{
-					width: "100%",
+					position: "fixed",
+					top: "20px",
+					left: "50%",
+					transform: "translateX(-50%)",
+					zIndex: 1000,
 					display: "flex",
-					justifyContent: "flex-end",
-					padding: "1rem",
+					gap: "2rem",
+					padding: "0.75rem 1.5rem",
+					background: "rgba(20, 20, 20, 0.85)",
+					backdropFilter: "blur(8px)",
+					border: "1px solid #444",
+					borderRadius: "50px",
+					boxShadow: "0 4px 15px rgba(0,0,0,0.5)",
+					alignItems: "center",
 				}}
 			>
-				<button
-					onClick={() => setShowDesignLab(true)}
+				<div
 					style={{
 						display: "flex",
 						alignItems: "center",
 						gap: "0.5rem",
+						color: "#ffd700",
+					}}
+				>
+					<Coins size={18} />
+					<span style={{ fontWeight: "bold" }}>${money}</span>
+				</div>
+				<div
+					style={{
+						display: "flex",
+						alignItems: "center",
+						gap: "0.5rem",
+						color: "#00ff00",
+					}}
+				>
+					<UserSquare size={18} />
+					<span>{reputation} Rep</span>
+				</div>
+				<button
+					onClick={() => manualDeal()}
+					style={{
+						padding: "4px 12px",
+						borderRadius: "20px",
+						fontSize: "0.7rem",
+						display: "flex",
+						alignItems: "center",
+						gap: "0.4rem",
 						background: "#333",
 					}}
 				>
-					<FlaskConical size={16} /> Design Lab
+					<Hand size={12} /> Deal
 				</button>
-			</div>
+			</header>
 
-			<h1>🎰 Casino Tycoon</h1>
-
-			<div
-				style={{
-					display: "flex",
-					gap: "2rem",
-					padding: "1rem",
-					border: "2px solid #333",
-					borderRadius: "8px",
-				}}
-			>
-				<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-					<Coins size={24} color="#ffd700" />
-					<span>Cash: ${money}</span>
-				</div>
-				<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-					<UserSquare size={24} color="#00ff00" />
-					<span>Reputation: {reputation}</span>
-				</div>
-			</div>
-
-			<div
-				style={{
-					display: "flex",
-					flexDirection: "column",
-					gap: "1rem",
-					width: "100%",
-					maxWidth: "400px",
-				}}
-			>
-				<h2>Floor Operations</h2>
-				<button type="button" onClick={() => manualDeal()}>
-					Manual Deal (+$5)
-				</button>
-				<p style={{ opacity: 0.6 }}>Deals completed: {manualDeals}</p>
-			</div>
-
-			<div style={{ marginTop: "2rem", fontSize: "0.8rem", opacity: 0.4 }}>
-				Phase 1: Bootstrap & Manual Deal
-			</div>
+			<CasinoFloor />
 		</div>
+	);
+
+	if (isDevMode) {
+		return <DevShell>{content}</DevShell>;
+	}
+
+	return content;
+}
+
+function App() {
+	return (
+		<BrowserRouter>
+			<Routes>
+				<Route path="/" element={<GameView />} />
+				<Route path="/design-lab" element={<DesignLab />} />
+			</Routes>
+		</BrowserRouter>
 	);
 }
 
