@@ -1,19 +1,36 @@
-import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { HashRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Coins, UserSquare, Hand } from "lucide-react";
 import { useGameStore } from "./store/useGameStore";
 import DesignLab from "./components/DesignLab/DesignLab";
 import DevShell from "./components/DevShell/DevShell";
 import CasinoFloor from "./components/CasinoFloor/CasinoFloor";
+import ShopMenu from "./components/ShopMenu/ShopMenu";
+import PokieDialog from "./components/PokieDialog/PokieDialog";
 
 function GameView() {
-	const { money, reputation, manualDeal } = useGameStore();
+	const { money, reputation, manualDeal, tick } = useGameStore();
 	const location = useLocation();
 	const [isDevMode, setIsDevMode] = useState(false);
 
+	// Game Loop
+	const lastTime = useRef(performance.now());
+	useEffect(() => {
+		let frameId: number;
+		const loop = (time: number) => {
+			const dt = (time - lastTime.current) / 1000;
+			lastTime.current = time;
+			tick(dt);
+			frameId = requestAnimationFrame(loop);
+		};
+		frameId = requestAnimationFrame(loop);
+		return () => cancelAnimationFrame(frameId);
+	}, [tick]);
+
 	useEffect(() => {
 		const params = new URLSearchParams(location.search);
-		if (params.get("dev") === "true") {
+		const hashParams = new URLSearchParams(window.location.hash.split("?")[1]);
+		if (params.get("dev") === "true" || hashParams.get("dev") === "true") {
 			setIsDevMode(true);
 		}
 	}, [location.search]);
@@ -55,7 +72,7 @@ function GameView() {
 					}}
 				>
 					<Coins size={18} />
-					<span style={{ fontWeight: "bold" }}>${money}</span>
+					<span style={{ fontWeight: "bold" }}>${money.toFixed(2)}</span>
 				</div>
 				<div
 					style={{
@@ -69,6 +86,7 @@ function GameView() {
 					<span>{reputation} Rep</span>
 				</div>
 				<button
+					type="button"
 					onClick={() => manualDeal()}
 					style={{
 						padding: "4px 12px",
@@ -85,6 +103,8 @@ function GameView() {
 			</header>
 
 			<CasinoFloor />
+			<ShopMenu />
+			<PokieDialog />
 		</div>
 	);
 
@@ -97,12 +117,12 @@ function GameView() {
 
 function App() {
 	return (
-		<BrowserRouter>
+		<HashRouter>
 			<Routes>
 				<Route path="/" element={<GameView />} />
 				<Route path="/design-lab" element={<DesignLab />} />
 			</Routes>
-		</BrowserRouter>
+		</HashRouter>
 	);
 }
 

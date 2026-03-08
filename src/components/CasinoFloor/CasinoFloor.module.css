@@ -1,86 +1,97 @@
 .viewport {
-	position: relative;
-	width: 100vw;
-	height: 100vh;
-	background: #0a0a0a;
-	overflow: hidden;
-	cursor: grab;
-}
-
-.viewport:active {
-	cursor: grabbing;
-}
-
-.panLayer {
-	position: absolute;
-	top: 0;
-	left: 0;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	width: 100%;
-	height: 100%;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #050505;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
 }
 
 .grid {
-	display: grid;
-	gap: 1px;
-	background: #222;
-	border: 2px solid #333;
-	image-rendering: pixelated;
-	transition-property: width, height, grid-template-columns;
-	transition-timing-function: cubic-bezier(
-		0.22,
-		1,
-		0.36,
-		1
-	); /* "Balloon" ease-out */
+  display: grid;
+  background: #222;
+  border: 4px solid #333;
+  image-rendering: pixelated;
+  gap: 1px;
+  transform-origin: center;
+  transition: transform 1s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 0 100px rgba(0,0,0,0.5);
 }
 
 .tile {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding: 0;
-	border: none;
-	border-radius: 0;
-	cursor: pointer;
-	box-shadow: none;
+  appearance: none;
+  background: #1e1e1e;
+  border: none;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: none;
+  position: relative;
+  width: 32px;
+  height: 32px;
 }
 
 .tile:hover {
-	filter: brightness(1.3);
-	outline: 1px solid #646cff;
-	z-index: 10;
+  filter: brightness(1.3);
+  outline: 1px solid #646cff;
+  z-index: 10;
 }
 
-.floor {
-	background: #1e1e1e;
-}
-.wall {
-	background: #444;
-}
+.floor { background: #1e1e1e; }
+.wall { background: #444; }
 
-/* Controls */
+/* Enhanced Zoom Controls */
 .controls {
-	position: fixed;
-	right: 20px;
-	top: 50%;
-	transform: translateY(-50%);
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-	z-index: 100;
+  position: fixed;
+  right: 24px;
+  bottom: 100px; /* Above the shop menu if expanded */
+  display: flex;
+  flex-direction: column;
+  background: rgba(20, 20, 20, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid #444;
+  border-radius: 30px;
+  padding: 4px;
+  gap: 2px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 1000;
 }
 
 .controlBtn {
-	width: 40px;
-	height: 40px;
-	background: rgba(40, 40, 40, 0.8);
-	border: 1px solid #444;
-	color: white;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: none;
+  color: #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  box-shadow: none;
+}
+
+.controlBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.controlBtn:active {
+  transform: scale(0.9);
+  background: rgba(100, 108, 255, 0.3);
+}
+
+.separator {
+  height: 1px;
+  background: #333;
+  margin: 0 10px;
 }

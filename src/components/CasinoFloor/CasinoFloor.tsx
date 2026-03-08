@@ -1,91 +1,122 @@
-import React, { useState, useRef } from "react";
-import styles from "./CasinoFloor.module.css";
+import { Minus, Plus, RotateCcw, Dices as SlotIcon } from "lucide-react";
+import React, { useEffect, useRef } from "react";
 import { useGameStore } from "../../store/useGameStore";
-import { Plus, Minus, RotateCcw } from "lucide-react";
+import styles from "./CasinoFloor.module.css";
 
 const CasinoFloor: React.FC = () => {
-	const { casinoState, setTile, zoom, setZoom, zoomDuration } = useGameStore();
-	const { grid, width, height } = casinoState;
+	const {
+		casinoState,
+		setTile,
+		zoom,
+		setZoom,
+		zoomDuration,
+		isBuilding,
+		addObject,
+		selectObject,
+	} = useGameStore();
+	const { grid, width, height, objects } = casinoState;
+	const viewportRef = useRef<HTMLDivElement>(null);
 
-	// Panning State
-	const [offset, setOffset] = useState({ x: 0, y: 0 });
-	const [isPanning, setIsPanning] = useState(false);
-	const lastMousePos = useRef({ x: 0, y: 0 });
+	const BASE_TILE_SIZE = 32;
 
-	const onMouseDown = (e: React.MouseEvent) => {
-		if (
-			e.button === 0 &&
-			(e.target as HTMLElement).className.includes("viewport")
-		) {
-			setIsPanning(true);
-			lastMousePos.current = { x: e.clientX, y: e.clientY };
-		}
+	const fitToScreen = () => {
+		if (!viewportRef.current) return;
+		const padding = 120;
+		const vWidth = viewportRef.current.clientWidth - padding;
+		const vHeight = viewportRef.current.clientHeight - padding;
+		const totalBaseWidth = width * BASE_TILE_SIZE + (width - 1);
+		const totalBaseHeight = height * BASE_TILE_SIZE + (height - 1);
+		const scaleX = vWidth / totalBaseWidth;
+		const scaleY = vHeight / totalBaseHeight;
+		setZoom(Math.min(scaleX, scaleY));
 	};
 
-	const onMouseMove = (e: React.MouseEvent) => {
-		if (!isPanning) return;
-		const dx = e.clientX - lastMousePos.current.x;
-		const dy = e.clientY - lastMousePos.current.y;
-		setOffset((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-		lastMousePos.current = { x: e.clientX, y: e.clientY };
+	useEffect(() => {
+		if (zoom === 1.0) {
+			fitToScreen();
+		}
+	}, []);
+
+	const handleTileClick = (
+		x: number,
+		y: number,
+		type: string,
+		occupantId?: string,
+	) => {
+		if (isBuilding) {
+			addObject(x, y);
+			return;
+		}
+
+		if (occupantId) {
+			selectObject(occupantId);
+			return;
+		}
+
+		setTile(x, y, type === "wall" ? "floor" : "wall");
 	};
 
 	return (
-		<div
-			className={styles.viewport}
-			onMouseDown={onMouseDown}
-			onMouseMove={onMouseMove}
-			onMouseUp={() => setIsPanning(false)}
-			onMouseLeave={() => setIsPanning(false)}
-		>
+		<div className={styles.viewport} ref={viewportRef}>
 			<div
-				className={styles.panLayer}
-				style={{ transform: `translate(${offset.x}px, ${offset.y}px)` }}
+				className={styles.grid}
+				style={{
+					gridTemplateColumns: `repeat(${width}, ${BASE_TILE_SIZE}px)`,
+					gridTemplateRows: `repeat(${height}, ${BASE_TILE_SIZE}px)`,
+					transform: `scale(${zoom})`,
+					transitionDuration: `${zoomDuration}s`,
+				}}
 			>
-				<div
-					className={styles.grid}
-					style={{
-						gridTemplateColumns: `repeat(${width}, ${zoom}px)`,
-						width: width * zoom + (width - 1),
-						height: height * zoom + (height - 1),
-						transitionDuration: `${zoomDuration}s`,
-					}}
-				>
-					{grid.map((row, y) =>
-						row.map((tile, x) => (
+				{grid.map((row, y) =>
+					row.map((tile, x) => {
+						const obj = objects.find(
+							(o) => o.position.x === x && o.position.y === y,
+						);
+						return (
 							<button
 								key={tile.id}
 								type="button"
 								className={`${styles.tile} ${styles[tile.type]}`}
-								style={{ width: zoom, height: zoom }}
 								onClick={() =>
-									setTile(x, y, tile.type === "wall" ? "floor" : "wall")
+									handleTileClick(x, y, tile.type, tile.occupantId)
 								}
-							/>
-						)),
-					)}
-				</div>
+							>
+								{obj && (
+									<SlotIcon
+										size={BASE_TILE_SIZE * 0.7}
+										color={obj.isRunning ? "#00ff00" : "#ffd700"}
+									/>
+								)}
+							</button>
+						);
+					}),
+				)}
 			</div>
 
 			<div className={styles.controls}>
 				<button
 					type="button"
 					className={styles.controlBtn}
-					onClick={() => setZoom(zoom + 16)}
+					onClick={() => setZoom(zoom + 0.2)}
+					title="Zoom In"
 				>
 					<Plus size={20} />
 				</button>
+				<div className={styles.separator} />
 				<button
 					type="button"
 					className={styles.controlBtn}
-					onClick={() => setZoom(32)}
+					onClick={() => fitToScreen()}
+					title="Reset Zoom"
 				>
-					<RotateCcw size={20} />
+					<RotateCcw size={18} />
 				</button>
+				<div className={styles.separator} />
 				<button
 					type="button"
 					className={styles.controlBtn}
-					onClick={() => setZoom(zoom - 16)}
+					onClick={() => setZoom(Math.max(0.1, zoom - 0.2))}
+					title="Zoom Out"
 				>
 					<Minus size={20} />
 				</button>
