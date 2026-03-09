@@ -31,4 +31,21 @@ describe('Game Store Integrity', () => {
     expect(newState.money).toBe(100);
     expect(newState.casinoState.objects.length).toBe(0);
   });
+
+  it('handles frozen state rehydration correctly (Prevents Object.isExtensible crash)', () => {
+    // 1. Create a "Frozen" state like the one coming from Persistence/Immer
+    const frozenState = Object.freeze({
+      width: 10,
+      height: 10,
+      grid: Object.freeze([]),
+      objects: Object.freeze([])
+    });
+
+    // 2. Initializing a simulation from this should not crash when adding objects later
+    const { _sim } = useGameStore.getState();
+    const simWithFrozenSource = new (_sim.constructor as any)(10, 10, frozenState);
+    
+    // 3. This would have crashed before the fix
+    expect(() => simWithFrozenSource.addObject(0, 0, 'pokie-basic')).not.toThrow();
+  });
 });

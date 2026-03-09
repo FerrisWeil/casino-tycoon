@@ -12,9 +12,11 @@ export class Casino {
 		if (savedState) {
 			this.width = savedState.width;
 			this.height = savedState.height;
-			this.grid = savedState.grid;
-			this.objects = savedState.objects;
-			// Rebuild logic classes
+			// Deep clone to ensure internal state is mutable (not frozen by Immer/Persist)
+			this.grid = JSON.parse(JSON.stringify(savedState.grid));
+			this.objects = JSON.parse(JSON.stringify(savedState.objects));
+			
+			// Rebuild logic classes from the fresh clones
 			for (const obj of this.objects) {
 				this.pokieLogics.set(obj.id, new Pokie(obj));
 			}
@@ -34,7 +36,7 @@ export class Casino {
 					id: `${x}-${y}`,
 					type: "floor",
 					position: { x, y },
-					occupantId: undefined, // Explicitly clear
+					occupantId: undefined,
 				});
 			}
 			newGrid.push(row);
@@ -54,13 +56,14 @@ export class Casino {
 	}
 
 	public addObject(x: number, y: number, _type: GameObjectType): boolean {
-		// Verify bounds and occupancy
 		if (!this.grid[y] || !this.grid[y][x]) return false;
 		if (this.grid[y][x].type !== "floor" || this.grid[y][x].occupantId)
 			return false;
 
 		const id = `obj-${Math.random().toString(36).substr(2, 9)}`;
 		const data = Pokie.createDefault(id, x, y);
+		
+		// This will now succeed because this.objects was cloned in the constructor
 		this.objects.push(data);
 		this.pokieLogics.set(id, new Pokie(data));
 		this.grid[y][x].occupantId = id;
