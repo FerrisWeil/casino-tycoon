@@ -29,8 +29,8 @@ export interface PokieSettings {
 }
 
 export interface PokeResult {
-  payout: number;
-  wager: number;
+	payout: number;
+	wager: number;
 }
 
 export interface PokieStats {

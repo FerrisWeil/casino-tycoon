@@ -49,20 +49,28 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 		setCommand("");
 	};
 
-  // Combine local command logs with global simulation logs
-  const allLogs = [...localLogs, ...state._logs];
+	// Combine local command logs with global simulation logs
+	const allLogs = [...localLogs, ...state._logs];
 
 	return (
 		<>
-			<div style={{ paddingBottom: isCollapsed ? '30px' : '300px' }}>
+			<div style={{ paddingBottom: isCollapsed ? "30px" : "300px" }}>
 				{children}
 			</div>
 			<div className={styles.wrapper}>
 				<div className={`${styles.hud} ${isCollapsed ? styles.collapsed : ""}`}>
 					<div className={styles.header}>
 						<span>Developer HUD</span>
-						<button type="button" onClick={() => setIsCollapsed(!isCollapsed)} className={styles.toggle}>
-							{isCollapsed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+						<button
+							type="button"
+							onClick={() => setIsCollapsed(!isCollapsed)}
+							className={styles.toggle}
+						>
+							{isCollapsed ? (
+								<ChevronUp size={14} />
+							) : (
+								<ChevronDown size={14} />
+							)}
 						</button>
 					</div>
 
@@ -73,12 +81,16 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 							</div>
 							<div className={styles.content}>
 								<pre className={styles.json}>
-									{JSON.stringify({
-                    money: state.money,
-                    isBuilding: state.isBuilding,
-                    selectedObject: state.selectedObject,
-                    objects: state.casinoState.objects.length
-                  }, null, 2)}
+									{JSON.stringify(
+										{
+											money: state.money,
+											isBuilding: state.isBuilding,
+											selectedObject: state.selectedObject,
+											objects: state.casinoState.objects.length,
+										},
+										null,
+										2,
+									)}
 								</pre>
 							</div>
 						</section>
@@ -90,13 +102,15 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 							<div className={styles.content}>
 								<div className={styles.console}>
 									<div className={styles.logList}>
-										{allLogs.map((log, i) => <div key={i}>{log}</div>)}
+										{allLogs.map((log, i) => (
+											<div key={i}>{log}</div>
+										))}
 									</div>
 									<form onSubmit={runCommand} className={styles.inputArea}>
 										<span>&gt;</span>
-										<input 
-											value={command} 
-											onChange={(e) => setCommand(e.target.value)} 
+										<input
+											value={command}
+											onChange={(e) => setCommand(e.target.value)}
 											placeholder="Type 'help'..."
 										/>
 									</form>

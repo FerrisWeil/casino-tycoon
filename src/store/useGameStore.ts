@@ -1,7 +1,12 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { persist, createJSONStorage } from "zustand/middleware";
-import type { CasinoState, GameObjectType, TileType, PokieSettings } from "../types";
+import type {
+	CasinoState,
+	GameObjectType,
+	TileType,
+	PokieSettings,
+} from "../types";
 import { Casino } from "../simulation/Casino";
 
 interface GameState {
@@ -9,17 +14,17 @@ interface GameState {
 	reputation: number;
 	manualDeals: number;
 	casinoState: CasinoState;
-	
+
 	_sim: Casino;
-  _logs: string[]; // Internal logs for Dev HUD
-	
+	_logs: string[]; // Internal logs for Dev HUD
+
 	// Viewport & UI State
 	zoom: number;
 	zoomDuration: number;
 	isBuilding: boolean;
 	selectedObject: GameObjectType | null;
 	selectedObjectId: string | null;
-	
+
 	// Actions
 	addMoney: (amount: number) => void;
 	manualDeal: () => void;
@@ -32,7 +37,7 @@ interface GameState {
 	tick: (dt: number) => void;
 	setZoom: (level: number) => void;
 	resetGame: () => void;
-  addLog: (msg: string) => void;
+	addLog: (msg: string) => void;
 }
 
 const getInitialState = () => {
@@ -57,12 +62,13 @@ export const useGameStore = create<GameState>()(
 		immer((set, get) => ({
 			...getInitialState(),
 
-      addLog: (msg) => set(s => { 
-        s._logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
-        if (s._logs.length > 50) s._logs.shift();
-      }),
+			addLog: (msg) =>
+				set((s) => {
+					s._logs.push(`[${new Date().toLocaleTimeString()}] ${msg}`);
+					if (s._logs.length > 50) s._logs.shift();
+				}),
 
-			setZoom: (level) => 
+			setZoom: (level) =>
 				set((state) => {
 					state.zoom = Math.max(0.1, Math.min(10, level));
 				}),
@@ -108,17 +114,19 @@ export const useGameStore = create<GameState>()(
 				const sim = state._sim;
 				const cost = 50;
 
-        get().addLog(`Build: Attempting placement at ${x},${y}`);
+				get().addLog(`Build: Attempting placement at ${x},${y}`);
 
 				if (state.money < cost) {
-          get().addLog(`Build: Insufficient funds ($${state.money.toFixed(2)} < $${cost})`);
-          return;
-        }
+					get().addLog(
+						`Build: Insufficient funds ($${state.money.toFixed(2)} < $${cost})`,
+					);
+					return;
+				}
 
-        if (!state.selectedObject) {
-          get().addLog(`Build: No object selected`);
-          return;
-        }
+				if (!state.selectedObject) {
+					get().addLog(`Build: No object selected`);
+					return;
+				}
 
 				const success = sim.addObject(x, y, state.selectedObject);
 				if (success) {
@@ -128,17 +136,17 @@ export const useGameStore = create<GameState>()(
 						s.isBuilding = false;
 						s.selectedObject = null;
 					});
-          get().addLog(`Build: Success! Placed ${state.selectedObject}`);
+					get().addLog(`Build: Success! Placed ${state.selectedObject}`);
 				} else {
-          get().addLog(`Build: Placement failed (Tile blocked or invalid)`);
-        }
+					get().addLog(`Build: Placement failed (Tile blocked or invalid)`);
+				}
 			},
 
 			togglePokie: (id) => {
 				const obj = get()._sim.getObject(id);
 				if (obj) {
 					set((state) => {
-						const target = state.casinoState.objects.find(o => o.id === id);
+						const target = state.casinoState.objects.find((o) => o.id === id);
 						if (target) target.isRunning = !target.isRunning;
 						obj.isRunning = !obj.isRunning;
 					});
@@ -149,7 +157,7 @@ export const useGameStore = create<GameState>()(
 				const obj = get()._sim.getObject(id);
 				if (obj && !obj.isRunning) {
 					set((state) => {
-						const target = state.casinoState.objects.find(o => o.id === id);
+						const target = state.casinoState.objects.find((o) => o.id === id);
 						if (target) {
 							Object.assign(target.settings, newSettings);
 							Object.assign(obj.settings, newSettings);
@@ -158,33 +166,37 @@ export const useGameStore = create<GameState>()(
 				}
 			},
 
-			selectObject: (id) => set(s => { s.selectedObjectId = id; }),
+			selectObject: (id) =>
+				set((s) => {
+					s.selectedObjectId = id;
+				}),
 
 			resetGame: () => {
-        get().addLog("RESETTING GAME...");
+				get().addLog("RESETTING GAME...");
 				// Clear the actual storage if in browser
 				if (typeof window !== "undefined" && window.localStorage) {
 					useGameStore.persist?.clearStorage();
-          set(() => getInitialState());
+					set(() => getInitialState());
 					setTimeout(() => window.location.reload(), 100);
 				}
-			}
+			},
 		})),
 		{
 			name: "casino-storage",
 			storage: createJSONStorage(() => localStorage),
-			partialize: (state) => ({
-				money: state.money,
-				reputation: state.reputation,
-				manualDeals: state.manualDeals,
-				casinoState: state.casinoState,
-				zoom: state.zoom,
-			} as any),
+			partialize: (state) =>
+				({
+					money: state.money,
+					reputation: state.reputation,
+					manualDeals: state.manualDeals,
+					casinoState: state.casinoState,
+					zoom: state.zoom,
+				}) as any,
 			onRehydrateStorage: () => (state) => {
 				if (state) {
 					state._sim = new Casino(10, 10, state.casinoState);
 				}
 			},
-		}
-	)
+		},
+	),
 );

@@ -12,23 +12,34 @@ const PokieDialog: React.FC = () => {
 		updatePokieSettings,
 	} = useGameStore();
 	const [activeTab, setActiveTab] = useState<"settings" | "stats">("settings");
-  const [viewWindow, setViewWindow] = useState<10 | 50 | 100>(100);
+	const [viewWindow, setViewWindow] = useState<10 | 50 | 100>(100);
 
 	const pokie = casinoState.objects.find((o) => o.id === selectedObjectId);
 	if (!pokie) return null;
 
 	const totalRtp =
-		(pokie.settings.grand.size * pokie.settings.grand.chance) / pokie.settings.wager +
-		(pokie.settings.major.size * pokie.settings.major.chance) / pokie.settings.wager +
-		(pokie.settings.minor.size * pokie.settings.minor.chance) / pokie.settings.wager +
-		(pokie.settings.mini.size * pokie.settings.mini.chance) / pokie.settings.wager +
+		(pokie.settings.grand.size * pokie.settings.grand.chance) /
+			pokie.settings.wager +
+		(pokie.settings.major.size * pokie.settings.major.chance) /
+			pokie.settings.wager +
+		(pokie.settings.minor.size * pokie.settings.minor.chance) /
+			pokie.settings.wager +
+		(pokie.settings.mini.size * pokie.settings.mini.chance) /
+			pokie.settings.wager +
 		pokie.settings.additionalRtp;
 
-  // Calculate stats for the selected window
-  const historySlice = pokie.stats.history.slice(-viewWindow);
-  const windowPaid = historySlice.reduce((a, b) => a + (typeof b === 'object' ? b.payout : (typeof b === 'number' ? b : 0)), 0);
-  const windowWagered = historySlice.reduce((a, b) => a + (typeof b === 'object' ? b.wager : 1), 0);
-  const windowRtp = windowWagered > 0 ? windowPaid / windowWagered : 0;
+	// Calculate stats for the selected window
+	const historySlice = pokie.stats.history.slice(-viewWindow);
+	const windowPaid = historySlice.reduce(
+		(a, b) =>
+			a + (typeof b === "object" ? b.payout : typeof b === "number" ? b : 0),
+		0,
+	);
+	const windowWagered = historySlice.reduce(
+		(a, b) => a + (typeof b === "object" ? b.wager : 1),
+		0,
+	);
+	const windowRtp = windowWagered > 0 ? windowPaid / windowWagered : 0;
 
 	return (
 		<div className={styles.overlay}>
@@ -65,7 +76,9 @@ const PokieDialog: React.FC = () => {
 				<div className={styles.content}>
 					{activeTab === "settings" && (
 						<div style={{ opacity: pokie.isRunning ? 0.7 : 1 }}>
-							<div style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}>
+							<div
+								style={{ display: "flex", gap: "1rem", marginBottom: "2rem" }}
+							>
 								<button
 									type="button"
 									onClick={() => togglePokie(pokie.id)}
@@ -90,30 +103,47 @@ const PokieDialog: React.FC = () => {
 								</button>
 							</div>
 
-							<h4>Payout Configuration {pokie.isRunning && <span style={{ color: '#ff4444', fontSize: '0.6rem' }}>(STOP MACHINE TO EDIT)</span>}</h4>
-							<p style={{ fontSize: "0.7rem", opacity: 0.5, marginBottom: "1rem" }}>
+							<h4>
+								Payout Configuration{" "}
+								{pokie.isRunning && (
+									<span style={{ color: "#ff4444", fontSize: "0.6rem" }}>
+										(STOP MACHINE TO EDIT)
+									</span>
+								)}
+							</h4>
+							<p
+								style={{
+									fontSize: "0.7rem",
+									opacity: 0.5,
+									marginBottom: "1rem",
+								}}
+							>
 								Total Expected RTP: {(totalRtp * 100).toFixed(2)}%
 							</p>
 
-              <div className={styles.formGroup}>
+							<div className={styles.formGroup}>
 								<label>Bet Amount ($)</label>
 								<input
 									type="range"
-                  min="0.25"
-                  max="10"
-                  step="0.25"
+									min="0.25"
+									max="10"
+									step="0.25"
 									value={pokie.settings.wager}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
-										updatePokieSettings(pokie.id, { wager: Number(e.target.value) })
+										updatePokieSettings(pokie.id, {
+											wager: Number(e.target.value),
+										})
 									}
 								/>
-                <input
+								<input
 									type="number"
 									value={pokie.settings.wager}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
-										updatePokieSettings(pokie.id, { wager: Number(e.target.value) })
+										updatePokieSettings(pokie.id, {
+											wager: Number(e.target.value),
+										})
 									}
 								/>
 							</div>
@@ -123,7 +153,7 @@ const PokieDialog: React.FC = () => {
 								<input
 									type="number"
 									value={pokie.settings.grand.size}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
 										updatePokieSettings(pokie.id, {
 											grand: {
@@ -137,7 +167,7 @@ const PokieDialog: React.FC = () => {
 									type="number"
 									step="0.00001"
 									value={pokie.settings.grand.chance}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
 										updatePokieSettings(pokie.id, {
 											grand: {
@@ -153,7 +183,7 @@ const PokieDialog: React.FC = () => {
 								<input
 									type="number"
 									value={pokie.settings.major.size}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
 										updatePokieSettings(pokie.id, {
 											major: {
@@ -167,7 +197,7 @@ const PokieDialog: React.FC = () => {
 									type="number"
 									step="0.0001"
 									value={pokie.settings.major.chance}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
 										updatePokieSettings(pokie.id, {
 											major: {
@@ -185,7 +215,7 @@ const PokieDialog: React.FC = () => {
 									step="0.01"
 									style={{ gridColumn: "span 2" }}
 									value={pokie.settings.additionalRtp}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
 										updatePokieSettings(pokie.id, {
 											additionalRtp: Number(e.target.value),
@@ -200,7 +230,7 @@ const PokieDialog: React.FC = () => {
 									step="0.1"
 									style={{ gridColumn: "span 2" }}
 									value={pokie.settings.pokeInterval}
-                  disabled={pokie.isRunning}
+									disabled={pokie.isRunning}
 									onChange={(e) =>
 										updatePokieSettings(pokie.id, {
 											pokeInterval: Number(e.target.value),
@@ -213,28 +243,46 @@ const PokieDialog: React.FC = () => {
 
 					{activeTab === "stats" && (
 						<div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '5px', marginBottom: '1rem' }}>
-                <span style={{ fontSize: '0.7rem', alignSelf: 'center', marginRight: '5px', opacity: 0.5 }}>Window:</span>
-                {[10, 50, 100].map(val => (
-                  <button 
-                    key={val} 
-                    type="button" 
-                    onClick={() => setViewWindow(val as any)}
-                    style={{ 
-                      padding: '2px 8px', 
-                      fontSize: '0.6rem', 
-                      background: viewWindow === val ? '#646cff' : '#222',
-                      borderColor: viewWindow === val ? '#fff' : '#444'
-                    }}
-                  >
-                    {val}
-                  </button>
-                ))}
-              </div>
+							<div
+								style={{
+									display: "flex",
+									justifyContent: "flex-end",
+									gap: "5px",
+									marginBottom: "1rem",
+								}}
+							>
+								<span
+									style={{
+										fontSize: "0.7rem",
+										alignSelf: "center",
+										marginRight: "5px",
+										opacity: 0.5,
+									}}
+								>
+									Window:
+								</span>
+								{[10, 50, 100].map((val) => (
+									<button
+										key={val}
+										type="button"
+										onClick={() => setViewWindow(val as any)}
+										style={{
+											padding: "2px 8px",
+											fontSize: "0.6rem",
+											background: viewWindow === val ? "#646cff" : "#222",
+											borderColor: viewWindow === val ? "#fff" : "#444",
+										}}
+									>
+										{val}
+									</button>
+								))}
+							</div>
 
 							<div className={styles.statsGrid}>
 								<div className={styles.statCard}>
-									<div className={styles.statLabel}>Rolling RTP ({viewWindow})</div>
+									<div className={styles.statLabel}>
+										Rolling RTP ({viewWindow})
+									</div>
 									<div
 										className={styles.statVal}
 										style={{
@@ -260,31 +308,47 @@ const PokieDialog: React.FC = () => {
 								</div>
 								<div className={styles.graphContainer}>
 									{historySlice.map((result, i) => {
-                    const payout = typeof result === 'object' ? result?.payout ?? 0 : (typeof result === 'number' ? result : 0);
-                    const wager = typeof result === 'object' ? result?.wager ?? 1 : 1;
+										const payout =
+											typeof result === "object"
+												? (result?.payout ?? 0)
+												: typeof result === "number"
+													? result
+													: 0;
+										const wager =
+											typeof result === "object" ? (result?.wager ?? 1) : 1;
 
-                    return (
-										<div
-											key={i}
-											className={styles.bar}
-											style={{
-												height: `${Math.max(2, Math.min(100, (payout / wager) * 10))}%`,
-												background: payout > wager ? "#ffd700" : "#00ff00",
-												opacity: 0.5 + (payout > 0 ? 0.5 : 0),
-											}}
-										>
-											<div className={styles.tooltip}>
-                        Win: ${payout.toFixed(2)}<br/>
-                        Bet: ${wager.toFixed(2)}
-                      </div>
-										</div>
-									)})}
+										return (
+											<div
+												key={i}
+												className={styles.bar}
+												style={{
+													height: `${Math.max(2, Math.min(100, (payout / wager) * 10))}%`,
+													background: payout > wager ? "#ffd700" : "#00ff00",
+													opacity: 0.5 + (payout > 0 ? 0.5 : 0),
+												}}
+											>
+												<div className={styles.tooltip}>
+													Win: ${payout.toFixed(2)}
+													<br />
+													Bet: ${wager.toFixed(2)}
+												</div>
+											</div>
+										);
+									})}
 								</div>
 							</div>
-							<div style={{ marginTop: "1rem", fontSize: "0.7rem", color: "#666" }}>
+							<div
+								style={{ marginTop: "1rem", fontSize: "0.7rem", color: "#666" }}
+							>
 								Last Win: $
-								{pokie.stats.history[pokie.stats.history.length - 1]?.payout?.toFixed(2) || "0.00"} 
-                (on ${pokie.stats.history[pokie.stats.history.length - 1]?.wager?.toFixed(2) || "0.00"} bet)
+								{pokie.stats.history[
+									pokie.stats.history.length - 1
+								]?.payout?.toFixed(2) || "0.00"}
+								(on $
+								{pokie.stats.history[
+									pokie.stats.history.length - 1
+								]?.wager?.toFixed(2) || "0.00"}{" "}
+								bet)
 							</div>
 						</div>
 					)}

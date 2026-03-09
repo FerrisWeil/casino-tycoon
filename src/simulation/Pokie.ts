@@ -54,12 +54,17 @@ export class Pokie {
 		// 1. Check Jackpots
 		if (roll < s.grand.chance) payout = s.grand.size;
 		else if (roll < s.grand.chance + s.major.chance) payout = s.major.size;
-		else if (roll < s.grand.chance + s.major.chance + s.minor.chance) payout = s.minor.size;
-		else if (roll < s.grand.chance + s.major.chance + s.minor.chance + s.mini.chance) payout = s.mini.size;
+		else if (roll < s.grand.chance + s.major.chance + s.minor.chance)
+			payout = s.minor.size;
+		else if (
+			roll <
+			s.grand.chance + s.major.chance + s.minor.chance + s.mini.chance
+		)
+			payout = s.mini.size;
 		else {
 			// 2. Additional RTP scaled by Wager
 			if (Math.random() < 0.2) {
-				payout = (s.additionalRtp * wager) / 0.2 * (0.5 + Math.random());
+				payout = ((s.additionalRtp * wager) / 0.2) * (0.5 + Math.random());
 			}
 		}
 
@@ -67,7 +72,7 @@ export class Pokie {
 		this.data.stats.pokesCount++;
 		this.data.stats.totalWagered += wager;
 		this.data.stats.totalPaid += payout;
-		
+
 		// Push the full result
 		this.data.stats.history.push({ payout, wager });
 		if (this.data.stats.history.length > 100) this.data.stats.history.shift();
@@ -75,7 +80,7 @@ export class Pokie {
 		// Calculate accurate rolling RTP from actual history
 		const sumPaid = this.data.stats.history.reduce((a, b) => a + b.payout, 0);
 		const sumWagered = this.data.stats.history.reduce((a, b) => a + b.wager, 0);
-		
+
 		this.data.stats.runningRtp = sumWagered > 0 ? sumPaid / sumWagered : 0;
 
 		return payout;

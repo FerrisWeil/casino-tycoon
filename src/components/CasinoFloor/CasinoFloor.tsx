@@ -82,7 +82,9 @@ const CasinoFloor: React.FC = () => {
 									height: BASE_TILE_SIZE,
 									position: "relative",
 								}}
-								onClick={() => handleTileClick(x, y, tile.type, tile.occupantId)}
+								onClick={() =>
+									handleTileClick(x, y, tile.type, tile.occupantId)
+								}
 							>
 								{obj && (
 									<SlotIcon

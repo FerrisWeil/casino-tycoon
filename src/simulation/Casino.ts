@@ -1,4 +1,10 @@
-import type { CasinoState, GameObject, GameObjectType, Tile, TileType } from "../types";
+import type {
+	CasinoState,
+	GameObject,
+	GameObjectType,
+	Tile,
+	TileType,
+} from "../types";
 import { Pokie } from "./Pokie";
 
 export class Casino {
@@ -15,7 +21,7 @@ export class Casino {
 			// Deep clone to ensure internal state is mutable (not frozen by Immer/Persist)
 			this.grid = JSON.parse(JSON.stringify(savedState.grid));
 			this.objects = JSON.parse(JSON.stringify(savedState.objects));
-			
+
 			// Rebuild logic classes from the fresh clones
 			for (const obj of this.objects) {
 				this.pokieLogics.set(obj.id, new Pokie(obj));
@@ -62,7 +68,7 @@ export class Casino {
 
 		const id = `obj-${Math.random().toString(36).substr(2, 9)}`;
 		const data = Pokie.createDefault(id, x, y);
-		
+
 		// This will now succeed because this.objects was cloned in the constructor
 		this.objects.push(data);
 		this.pokieLogics.set(id, new Pokie(data));
