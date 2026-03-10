@@ -15,17 +15,17 @@ export interface Tile {
 
 export interface JackpotSettings {
 	size: number;
-	chance: number; // 0 to 1
+	chance: number;
 }
 
 export interface PokieSettings {
-	pokeInterval: number; // seconds
+	pokeInterval: number;
 	wager: number;
 	grand: JackpotSettings;
 	major: JackpotSettings;
 	minor: JackpotSettings;
-	mini: JackpotSettings;
-	additionalRtp: number; // 0 to 1
+	mini: JackpotSettings; // Added missing property
+	additionalRtp: number;
 }
 
 export interface PokeResult {
@@ -34,7 +34,7 @@ export interface PokeResult {
 }
 
 export interface PokieStats {
-	history: PokeResult[]; // Last 100 pokes with actual data
+	history: PokeResult[];
 	totalWagered: number;
 	totalPaid: number;
 	pokesCount: number;
@@ -45,9 +45,30 @@ export interface GameObject {
 	id: string;
 	type: GameObjectType;
 	position: Point;
+	chairPosition: Point;
+	rotation: number;
 	isRunning: boolean;
 	settings: PokieSettings;
 	stats: PokieStats;
+	occupantId?: string;
+	isUnreachable?: boolean;
+}
+
+export interface GuestState {
+	id: string;
+	cash: number;
+	patience: number;
+	consecutiveLosses: number;
+	targetObjectId?: string;
+	isLeaving: boolean;
+	position: Point;
+	path: Point[];
+	visionTiles: Point[];
+}
+
+export interface DailyReport {
+	spend: number;
+	earnings: number;
 }
 
 export interface CasinoState {
@@ -55,4 +76,10 @@ export interface CasinoState {
 	height: number;
 	grid: Tile[][];
 	objects: GameObject[];
+	guests: GuestState[];
+	isOpen: boolean;
+	day: number;
+	dayTimer: number;
+	isPaused: boolean;
+	lastReport?: DailyReport;
 }

@@ -1,0 +1,168 @@
+{
+	"money": 50,
+	"reputation": 0,
+	"manualDeals": 0,
+	"casinoState": {
+		"width": 10,
+		"height": 10,
+		"grid": [
+			[
+				{ "id": "0-0", "type": "floor", "position": { "x": 0, "y": 0 } },
+				{ "id": "1-0", "type": "floor", "position": { "x": 1, "y": 0 } },
+				{ "id": "2-0", "type": "floor", "position": { "x": 2, "y": 0 } },
+				{ "id": "3-0", "type": "floor", "position": { "x": 3, "y": 0 } },
+				{ "id": "4-0", "type": "floor", "position": { "x": 4, "y": 0 } },
+				{ "id": "5-0", "type": "floor", "position": { "x": 5, "y": 0 } },
+				{ "id": "6-0", "type": "floor", "position": { "x": 6, "y": 0 } },
+				{ "id": "7-0", "type": "floor", "position": { "x": 7, "y": 0 } },
+				{ "id": "8-0", "type": "floor", "position": { "x": 8, "y": 0 } },
+				{ "id": "9-0", "type": "floor", "position": { "x": 9, "y": 0 } }
+			],
+			[
+				{ "id": "0-1", "type": "floor", "position": { "x": 0, "y": 1 } },
+				{
+					"id": "1-1",
+					"type": "floor",
+					"position": { "x": 1, "y": 1 },
+					"occupantId": "obj-nvi4vstyc"
+				},
+				{ "id": "2-1", "type": "floor", "position": { "x": 2, "y": 1 } },
+				{ "id": "3-1", "type": "floor", "position": { "x": 3, "y": 1 } },
+				{ "id": "4-1", "type": "floor", "position": { "x": 4, "y": 1 } },
+				{ "id": "5-1", "type": "floor", "position": { "x": 5, "y": 1 } },
+				{ "id": "6-1", "type": "floor", "position": { "x": 6, "y": 1 } },
+				{ "id": "7-1", "type": "floor", "position": { "x": 7, "y": 1 } },
+				{ "id": "8-1", "type": "floor", "position": { "x": 8, "y": 1 } },
+				{ "id": "9-1", "type": "floor", "position": { "x": 9, "y": 1 } }
+			],
+			[
+				{ "id": "0-2", "type": "floor", "position": { "x": 0, "y": 2 } },
+				{
+					"id": "1-2",
+					"type": "floor",
+					"position": { "x": 1, "y": 2 },
+					"occupantId": "obj-nvi4vstyc"
+				},
+				{ "id": "2-2", "type": "floor", "position": { "x": 2, "y": 2 } },
+				{ "id": "3-2", "type": "floor", "position": { "x": 3, "y": 2 } },
+				{ "id": "4-2", "type": "floor", "position": { "x": 4, "y": 2 } },
+				{ "id": "5-2", "type": "floor", "position": { "x": 5, "y": 2 } },
+				{ "id": "6-2", "type": "floor", "position": { "x": 6, "y": 2 } },
+				{ "id": "7-2", "type": "floor", "position": { "x": 7, "y": 2 } },
+				{ "id": "8-2", "type": "floor", "position": { "x": 8, "y": 2 } },
+				{ "id": "9-2", "type": "floor", "position": { "x": 9, "y": 2 } }
+			],
+			[
+				{ "id": "0-3", "type": "floor", "position": { "x": 0, "y": 3 } },
+				{ "id": "1-3", "type": "floor", "position": { "x": 1, "y": 3 } },
+				{ "id": "2-3", "type": "floor", "position": { "x": 2, "y": 3 } },
+				{ "id": "3-3", "type": "floor", "position": { "x": 3, "y": 3 } },
+				{ "id": "4-3", "type": "floor", "position": { "x": 4, "y": 3 } },
+				{ "id": "5-3", "type": "floor", "position": { "x": 5, "y": 3 } },
+				{ "id": "6-3", "type": "floor", "position": { "x": 6, "y": 3 } },
+				{ "id": "7-3", "type": "floor", "position": { "x": 7, "y": 3 } },
+				{ "id": "8-3", "type": "floor", "position": { "x": 8, "y": 3 } },
+				{ "id": "9-3", "type": "floor", "position": { "x": 9, "y": 3 } }
+			],
+			[
+				{ "id": "0-4", "type": "floor", "position": { "x": 0, "y": 4 } },
+				{ "id": "1-4", "type": "floor", "position": { "x": 1, "y": 4 } },
+				{ "id": "2-4", "type": "floor", "position": { "x": 2, "y": 4 } },
+				{ "id": "3-4", "type": "floor", "position": { "x": 3, "y": 4 } },
+				{ "id": "4-4", "type": "floor", "position": { "x": 4, "y": 4 } },
+				{ "id": "5-4", "type": "floor", "position": { "x": 5, "y": 4 } },
+				{ "id": "6-4", "type": "floor", "position": { "x": 6, "y": 4 } },
+				{ "id": "7-4", "type": "floor", "position": { "x": 7, "y": 4 } },
+				{ "id": "8-4", "type": "floor", "position": { "x": 8, "y": 4 } },
+				{ "id": "9-4", "type": "floor", "position": { "x": 9, "y": 4 } }
+			],
+			[
+				{ "id": "0-5", "type": "floor", "position": { "x": 0, "y": 5 } },
+				{ "id": "1-5", "type": "floor", "position": { "x": 1, "y": 5 } },
+				{ "id": "2-5", "type": "floor", "position": { "x": 2, "y": 5 } },
+				{ "id": "3-5", "type": "floor", "position": { "x": 3, "y": 5 } },
+				{ "id": "4-5", "type": "floor", "position": { "x": 4, "y": 5 } },
+				{ "id": "5-5", "type": "floor", "position": { "x": 5, "y": 5 } },
+				{ "id": "6-5", "type": "floor", "position": { "x": 6, "y": 5 } },
+				{ "id": "7-5", "type": "floor", "position": { "x": 7, "y": 5 } },
+				{ "id": "8-5", "type": "floor", "position": { "x": 8, "y": 5 } },
+				{ "id": "9-5", "type": "floor", "position": { "x": 9, "y": 5 } }
+			],
+			[
+				{ "id": "0-6", "type": "floor", "position": { "x": 0, "y": 6 } },
+				{ "id": "1-6", "type": "floor", "position": { "x": 1, "y": 6 } },
+				{ "id": "2-6", "type": "floor", "position": { "x": 2, "y": 6 } },
+				{ "id": "3-6", "type": "floor", "position": { "x": 3, "y": 6 } },
+				{ "id": "4-6", "type": "floor", "position": { "x": 4, "y": 6 } },
+				{ "id": "5-6", "type": "floor", "position": { "x": 5, "y": 6 } },
+				{ "id": "6-6", "type": "floor", "position": { "x": 6, "y": 6 } },
+				{ "id": "7-6", "type": "floor", "position": { "x": 7, "y": 6 } },
+				{ "id": "8-6", "type": "floor", "position": { "x": 8, "y": 6 } },
+				{ "id": "9-6", "type": "floor", "position": { "x": 9, "y": 6 } }
+			],
+			[
+				{ "id": "0-7", "type": "floor", "position": { "x": 0, "y": 7 } },
+				{ "id": "1-7", "type": "floor", "position": { "x": 1, "y": 7 } },
+				{ "id": "2-7", "type": "floor", "position": { "x": 2, "y": 7 } },
+				{ "id": "3-7", "type": "floor", "position": { "x": 3, "y": 7 } },
+				{ "id": "4-7", "type": "floor", "position": { "x": 4, "y": 7 } },
+				{ "id": "5-7", "type": "floor", "position": { "x": 5, "y": 7 } },
+				{ "id": "6-7", "type": "floor", "position": { "x": 6, "y": 7 } },
+				{ "id": "7-7", "type": "floor", "position": { "x": 7, "y": 7 } },
+				{ "id": "8-7", "type": "floor", "position": { "x": 8, "y": 7 } },
+				{ "id": "9-7", "type": "floor", "position": { "x": 9, "y": 7 } }
+			],
+			[
+				{ "id": "0-8", "type": "floor", "position": { "x": 0, "y": 8 } },
+				{ "id": "1-8", "type": "floor", "position": { "x": 1, "y": 8 } },
+				{ "id": "2-8", "type": "floor", "position": { "x": 2, "y": 8 } },
+				{ "id": "3-8", "type": "floor", "position": { "x": 3, "y": 8 } },
+				{ "id": "4-8", "type": "floor", "position": { "x": 4, "y": 8 } },
+				{ "id": "5-8", "type": "floor", "position": { "x": 5, "y": 8 } },
+				{ "id": "6-8", "type": "floor", "position": { "x": 6, "y": 8 } },
+				{ "id": "7-8", "type": "floor", "position": { "x": 7, "y": 8 } },
+				{ "id": "8-8", "type": "floor", "position": { "x": 8, "y": 8 } },
+				{ "id": "9-8", "type": "floor", "position": { "x": 9, "y": 8 } }
+			],
+			[
+				{ "id": "0-9", "type": "floor", "position": { "x": 0, "y": 9 } },
+				{ "id": "1-9", "type": "floor", "position": { "x": 1, "y": 9 } },
+				{ "id": "2-9", "type": "floor", "position": { "x": 2, "y": 9 } },
+				{ "id": "3-9", "type": "floor", "position": { "x": 3, "y": 9 } },
+				{ "id": "4-9", "type": "floor", "position": { "x": 4, "y": 9 } },
+				{ "id": "5-9", "type": "floor", "position": { "x": 5, "y": 9 } },
+				{ "id": "6-9", "type": "floor", "position": { "x": 6, "y": 9 } },
+				{ "id": "7-9", "type": "floor", "position": { "x": 7, "y": 9 } },
+				{ "id": "8-9", "type": "floor", "position": { "x": 8, "y": 9 } },
+				{ "id": "9-9", "type": "floor", "position": { "x": 9, "y": 9 } }
+			]
+		],
+		"objects": [
+			{
+				"id": "obj-nvi4vstyc",
+				"type": "pokie-basic",
+				"position": { "x": 1, "y": 1 },
+				"chairPosition": { "x": 1, "y": 2 },
+				"rotation": 0,
+				"isRunning": false,
+				"settings": {
+					"pokeInterval": 1,
+					"wager": 1,
+					"grand": { "size": 5000, "chance": 0.00001 },
+					"major": { "size": 500, "chance": 0.0001 },
+					"minor": { "size": 50, "chance": 0.001 },
+					"mini": { "size": 10, "chance": 0.01 },
+					"additionalRtp": 0.65
+				},
+				"stats": {
+					"history": [],
+					"totalWagered": 0,
+					"totalPaid": 0,
+					"pokesCount": 0,
+					"runningRtp": 0
+				}
+			}
+		]
+	},
+	"zoom": 1.9270516717325228
+}

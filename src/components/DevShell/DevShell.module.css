@@ -125,3 +125,41 @@
 	flex: 1;
 	outline: none;
 }
+
+/* Save Slots */
+.slotGrid {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.slotRow {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	background: #222;
+	padding: 4px 8px;
+	border-radius: 4px;
+}
+
+.slotRow button {
+	padding: 4px;
+	background: #333;
+	border: 1px solid #444;
+	color: #aaa;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex: 1;
+}
+
+.slotRow button:hover {
+	background: #444;
+	color: #fff;
+}
+
+.slotActive {
+	border-color: #00ff00;
+	color: #00ff00;
+	background: #1a331a;
+}

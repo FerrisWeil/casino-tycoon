@@ -1,5 +1,6 @@
 import { Play, Square, X } from "lucide-react";
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { useGameStore } from "../../store/useGameStore";
 import styles from "./PokieDialog.module.css";
 
@@ -17,18 +18,14 @@ const PokieDialog: React.FC = () => {
 	const pokie = casinoState.objects.find((o) => o.id === selectedObjectId);
 	if (!pokie) return null;
 
+	// Total RTP is now independent of wager in the calculation
 	const totalRtp =
-		(pokie.settings.grand.size * pokie.settings.grand.chance) /
-			pokie.settings.wager +
-		(pokie.settings.major.size * pokie.settings.major.chance) /
-			pokie.settings.wager +
-		(pokie.settings.minor.size * pokie.settings.minor.chance) /
-			pokie.settings.wager +
-		(pokie.settings.mini.size * pokie.settings.mini.chance) /
-			pokie.settings.wager +
+		pokie.settings.grand.size * pokie.settings.grand.chance +
+		pokie.settings.major.size * pokie.settings.major.chance +
+		pokie.settings.minor.size * pokie.settings.minor.chance +
+		pokie.settings.mini.size * pokie.settings.mini.chance +
 		pokie.settings.additionalRtp;
 
-	// Calculate stats for the selected window
 	const historySlice = pokie.stats.history.slice(-viewWindow);
 	const windowPaid = historySlice.reduce(
 		(a, b) =>
@@ -122,8 +119,9 @@ const PokieDialog: React.FC = () => {
 							</p>
 
 							<div className={styles.formGroup}>
-								<label>Bet Amount ($)</label>
+								<label htmlFor="bet-range">Bet Amount ($)</label>
 								<input
+									id="bet-range"
 									type="range"
 									min="0.25"
 									max="10"
@@ -149,8 +147,9 @@ const PokieDialog: React.FC = () => {
 							</div>
 
 							<div className={styles.formGroup}>
-								<label>Grand Jackpot</label>
+								<label htmlFor="grand-size">Grand Jackpot (x)</label>
 								<input
+									id="grand-size"
 									type="number"
 									value={pokie.settings.grand.size}
 									disabled={pokie.isRunning}
@@ -179,8 +178,9 @@ const PokieDialog: React.FC = () => {
 								/>
 							</div>
 							<div className={styles.formGroup}>
-								<label>Major Jackpot</label>
+								<label htmlFor="major-size">Major Jackpot (x)</label>
 								<input
+									id="major-size"
 									type="number"
 									value={pokie.settings.major.size}
 									disabled={pokie.isRunning}
@@ -209,8 +209,9 @@ const PokieDialog: React.FC = () => {
 								/>
 							</div>
 							<div className={styles.formGroup}>
-								<label>Additional RTP</label>
+								<label htmlFor="additional-rtp">Additional RTP</label>
 								<input
+									id="additional-rtp"
 									type="number"
 									step="0.01"
 									style={{ gridColumn: "span 2" }}
@@ -224,8 +225,9 @@ const PokieDialog: React.FC = () => {
 								/>
 							</div>
 							<div className={styles.formGroup}>
-								<label>Poke Speed (sec)</label>
+								<label htmlFor="poke-speed">Poke Speed (sec)</label>
 								<input
+									id="poke-speed"
 									type="number"
 									step="0.1"
 									style={{ gridColumn: "span 2" }}
@@ -261,11 +263,11 @@ const PokieDialog: React.FC = () => {
 								>
 									Window:
 								</span>
-								{[10, 50, 100].map((val) => (
+								{([10, 50, 100] as const).map((val) => (
 									<button
 										key={val}
 										type="button"
-										onClick={() => setViewWindow(val as any)}
+										onClick={() => setViewWindow(val)}
 										style={{
 											padding: "2px 8px",
 											fontSize: "0.6rem",
@@ -343,7 +345,7 @@ const PokieDialog: React.FC = () => {
 								Last Win: $
 								{pokie.stats.history[
 									pokie.stats.history.length - 1
-								]?.payout?.toFixed(2) || "0.00"}
+								]?.payout?.toFixed(2) || "0.00"}{" "}
 								(on $
 								{pokie.stats.history[
 									pokie.stats.history.length - 1

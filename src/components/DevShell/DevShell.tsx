@@ -1,7 +1,17 @@
-import React, { useState } from "react";
-import styles from "./DevShell.module.css";
-import { Terminal, Database, ChevronUp, ChevronDown } from "lucide-react";
+import {
+	ChevronDown,
+	ChevronUp,
+	Database,
+	Download,
+	Pause,
+	Play,
+	Save,
+	Terminal,
+} from "lucide-react";
+import type React from "react";
+import { useState } from "react";
 import { useGameStore } from "../../store/useGameStore";
+import styles from "./DevShell.module.css";
 
 const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const state = useGameStore();
@@ -24,7 +34,7 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 					"Available commands:",
 					"  help        - Show this list",
 					"  clear       - Clear the console",
-					"  reset       - RESET ALL PROGRESS",
+					"  reset       - RESET TO SLOT 0",
 					"  money = X   - Set money to X",
 					"  addmoney X  - Add X to current money",
 				]);
@@ -49,7 +59,6 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 		setCommand("");
 	};
 
-	// Combine local command logs with global simulation logs
 	const allLogs = [...localLogs, ...state._logs];
 
 	return (
@@ -60,7 +69,27 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 			<div className={styles.wrapper}>
 				<div className={`${styles.hud} ${isCollapsed ? styles.collapsed : ""}`}>
 					<div className={styles.header}>
-						<span>Developer HUD</span>
+						<span>Developer HUD - Slot {state.currentSlot}</span>
+						<button
+							type="button"
+							onClick={() => state.togglePause()}
+							style={{
+								marginLeft: "20px",
+								background: state.isPaused ? "#442222" : "#222",
+								padding: "2px 10px",
+								fontSize: "10px",
+							}}
+						>
+							{state.isPaused ? (
+								<>
+									<Play size={10} /> RESUME
+								</>
+							) : (
+								<>
+									<Pause size={10} /> PAUSE
+								</>
+							)}
+						</button>
 						<button
 							type="button"
 							onClick={() => setIsCollapsed(!isCollapsed)}
@@ -75,18 +104,55 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 					</div>
 
 					<div className={styles.main}>
+						<section className={styles.section} style={{ flex: "0 0 250px" }}>
+							<div className={styles.sectionTitle}>
+								<Save size={12} /> Save Slots
+							</div>
+							<div className={styles.slotGrid}>
+								<div className={styles.slotRow}>
+									<button
+										type="button"
+										className={state.currentSlot === 0 ? styles.slotActive : ""}
+										onClick={() => state.loadGame(0)}
+									>
+										Slot 0 (Clean)
+									</button>
+								</div>
+								{[1, 2, 3, 4, 5].map((slot) => (
+									<div key={slot} className={styles.slotRow}>
+										<span style={{ fontSize: "10px" }}>Slot {slot}</span>
+										<button
+											type="button"
+											onClick={() => state.loadGame(slot)}
+											title="Load"
+										>
+											<Download size={12} />
+										</button>
+										<button
+											type="button"
+											onClick={() => state.saveGame(slot)}
+											title="Save"
+										>
+											<Save size={12} />
+										</button>
+									</div>
+								))}
+							</div>
+						</section>
+
 						<section className={styles.section}>
 							<div className={styles.sectionTitle}>
-								<Database size={12} /> Live State
+								<Database size={12} /> State
 							</div>
 							<div className={styles.content}>
 								<pre className={styles.json}>
 									{JSON.stringify(
 										{
 											money: state.money,
-											isBuilding: state.isBuilding,
-											selectedObject: state.selectedObject,
-											objects: state.casinoState.objects.length,
+											objects: state.casinoState?.objects?.length || 0,
+											guests: state.casinoState?.guests?.length || 0,
+											isOpen: state.isOpen,
+											isPaused: state.isPaused,
 										},
 										null,
 										2,
@@ -95,9 +161,9 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 							</div>
 						</section>
 
-						<section className={styles.section}>
+						<section className={styles.section} style={{ flex: "2" }}>
 							<div className={styles.sectionTitle}>
-								<Terminal size={12} /> Console & Logs
+								<Terminal size={12} /> Console
 							</div>
 							<div className={styles.content}>
 								<div className={styles.console}>

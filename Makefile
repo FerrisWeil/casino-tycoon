@@ -19,7 +19,10 @@ build:
 test:
 	pnpm vitest run
 
-verify: lint test build
+e2e:
+	pnpm playwright test
+
+verify: lint test e2e build
 
 lint:
 	pnpm lint

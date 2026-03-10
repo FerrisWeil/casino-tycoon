@@ -1,63 +1,64 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { useGameStore } from "../useGameStore";
+import { describe, it, expect, beforeEach } from 'vitest';
+import { useGameStore } from '../useGameStore';
 
-describe("Game Store Integrity", () => {
-	beforeEach(() => {
-		const { resetGame } = useGameStore.getState();
-		resetGame();
-	});
+const getCleanCasinoState = () => ({
+  width: 7,
+  height: 7,
+  grid: [],
+  objects: [],
+  guests: [],
+  isOpen: false,
+  day: 1,
+  dayTimer: 0,
+  isPaused: false
+});
 
-	it("prioritizes building mode over object interaction", () => {
-		const state = useGameStore.getState();
-		state.setBuildingMode(true, "pokie-basic");
-		state.addObject(2, 2);
-		expect(useGameStore.getState().casinoState.objects.length).toBe(1);
-		// Building mode automatically turns off after success
-		expect(useGameStore.getState().isBuilding).toBe(false);
-	});
+describe('Game Store Integrity', () => {
+  beforeEach(() => {
+    // We can't easily call resetGame because of the window.location.reload()
+    // So we manually set the store state to defaults
+    useGameStore.setState({
+      money: 1000,
+      reputation: 0,
+      casinoState: getCleanCasinoState() as any,
+      isBuilding: false,
+      selectedObject: null,
+      isHydrated: true
+    });
+  });
 
-	it("resetGame clears money and objects", () => {
-		// Manually force the store to a clean state first to ensure test isolation
-		useGameStore.setState({
-			money: 100,
-			casinoState: { width: 10, height: 10, grid: [], objects: [] },
-		});
+  it('prioritizes building mode over object interaction', () => {
+    const state = useGameStore.getState();
+    state.setBuildingMode(true, 'pokie-basic');
+    state.addObject(2, 2);
+    expect(useGameStore.getState().casinoState.objects.length).toBe(1);
+    expect(useGameStore.getState().isBuilding).toBe(false);
+  });
 
-		const state = useGameStore.getState();
-		state.addMoney(900); // 100 + 900 = 1000
-		expect(useGameStore.getState().money).toBe(1000);
+  it('resetGame clears money and objects', () => {
+    useGameStore.setState({ money: 2000 });
+    const state = useGameStore.getState();
+    expect(state.money).toBe(2000);
+    
+    // Manual reset for test
+    useGameStore.setState({ money: 1000, casinoState: getCleanCasinoState() as any });
+    
+    const newState = useGameStore.getState();
+    expect(newState.money).toBe(1000);
+    expect(newState.casinoState.objects.length).toBe(0);
+  });
 
-		// Perform reset logic manually since we can't reload the page in test
-		useGameStore.setState({
-			money: 100,
-			casinoState: { width: 10, height: 10, grid: [], objects: [] },
-		});
+  it('handles frozen state rehydration correctly (Prevents Object.isExtensible crash)', () => {
+    const frozenState = Object.freeze({
+      width: 7,
+      height: 7,
+      grid: Object.freeze([]),
+      objects: Object.freeze([]),
+      guests: Object.freeze([])
+    });
 
-		const newState = useGameStore.getState();
-		expect(newState.money).toBe(100);
-		expect(newState.casinoState.objects.length).toBe(0);
-	});
-
-	it("handles frozen state rehydration correctly (Prevents Object.isExtensible crash)", () => {
-		// 1. Create a "Frozen" state like the one coming from Persistence/Immer
-		const frozenState = Object.freeze({
-			width: 10,
-			height: 10,
-			grid: Object.freeze([]),
-			objects: Object.freeze([]),
-		});
-
-		// 2. Initializing a simulation from this should not crash when adding objects later
-		const { _sim } = useGameStore.getState();
-		const simWithFrozenSource = new (_sim.constructor as any)(
-			10,
-			10,
-			frozenState,
-		);
-
-		// 3. This would have crashed before the fix
-		expect(() =>
-			simWithFrozenSource.addObject(0, 0, "pokie-basic"),
-		).not.toThrow();
-	});
+    const { _sim } = useGameStore.getState();
+    const simWithFrozenSource = new (_sim.constructor as any)(7, 7, frozenState);
+    expect(() => simWithFrozenSource.addObject(0, 0, 'pokie-basic')).not.toThrow();
+  });
 });

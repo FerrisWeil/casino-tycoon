@@ -1,11 +1,15 @@
 import { Dices as SlotIcon, X } from "lucide-react";
-import React from "react";
+import type React from "react";
 import { useGameStore } from "../../store/useGameStore";
 import type { GameObjectType } from "../../types";
 import styles from "./ShopMenu.module.css";
 
 const ShopMenu: React.FC = () => {
-	const { money, isBuilding, selectedObject, setBuildingMode } = useGameStore();
+	const { money, isBuilding, selectedObject, setBuildingMode, casinoState } =
+		useGameStore();
+
+	const numObjects = casinoState.objects.length;
+	const currentPrice = numObjects === 0 ? 0 : 1000;
 
 	const shopItems: {
 		id: GameObjectType;
@@ -16,7 +20,7 @@ const ShopMenu: React.FC = () => {
 		{
 			id: "pokie-basic",
 			name: "Pokie",
-			cost: 50,
+			cost: currentPrice,
 			icon: <SlotIcon size={20} />,
 		},
 	];
@@ -25,7 +29,8 @@ const ShopMenu: React.FC = () => {
 		return (
 			<div className={styles.container}>
 				<span style={{ fontSize: "0.8rem", alignSelf: "center" }}>
-					Placing: <b>{shopItems.find((i) => i.id === selectedObject)?.name}</b>
+					Placing: <b>{shopItems.find((i) => i.id === selectedObject)?.name}</b>{" "}
+					(Press R to Rotate)
 				</span>
 				<button
 					type="button"
@@ -51,7 +56,9 @@ const ShopMenu: React.FC = () => {
 				>
 					{item.icon}
 					<span style={{ fontSize: "0.7rem" }}>{item.name}</span>
-					<span className={styles.price}>${item.cost}</span>
+					<span className={styles.price}>
+						{item.cost === 0 ? "FREE" : `$${item.cost}`}
+					</span>
 				</button>
 			))}
 		</div>
