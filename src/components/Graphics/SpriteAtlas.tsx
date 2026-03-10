@@ -1,72 +1,84 @@
-import {
-	ChevronDown,
-	ChevronUp,
-	Maximize2,
-	Minimize2,
-	Search,
+import { 
+  ChevronDown, 
+  ChevronUp, 
+  Search, 
+  LayoutGrid, 
+  Sun,
+  Lightbulb,
+  LightbulbOff
 } from "lucide-react";
-import type React from "react";
-import { useState } from "react";
+import React, { useState } from "react";
 import styles from "./SpriteAtlas.module.css";
-import { ChairSprite, GuestSprite, PokieSprite } from "./Sprites";
+import { 
+  PokieSprite, 
+  ChairSprite, 
+  GuestSprite, 
+  BackWallSprite, 
+  WelcomeMatSprite,
+  PillarSprite 
+} from "./Sprites";
+import DynamicShadow from "./DynamicShadow";
 
 interface SpriteEntry {
 	id: string;
 	name: string;
-	category: "Objects" | "Guests" | "UI";
+	category: "Object" | "NPC" | "Environment";
 	description: string;
-	variants: { label: string; render: (size: number) => React.ReactNode }[];
-	scale: string;
+  shape: 'rect' | 'circle';
+  height: number;
+	variants: React.ReactNode[];
 }
 
 const SpriteAtlas: React.FC = () => {
-	const [searchTerm, setSearchBar] = useState("");
-	const [expandedItems, setExpandedItems] = useState<Set<string>>(
-		new Set(["pokie"]),
-	);
+	const [search, setSearch] = useState("");
+	const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set(["pokie"]));
+  const [sunY, setSunY] = useState(25);
+  const [isLightingEnabled, setIsLightingEnabled] = useState(true);
 
 	const sprites: SpriteEntry[] = [
 		{
 			id: "pokie",
-			name: "16-Bit Pokie Machine",
-			category: "Objects",
-			scale: "1.0m x 1.0m (32x32px fidelity)",
-			description: "Standard cabinet with glowing marquee and buttons.",
+			name: "Pokie Machine",
+			category: "Object",
+      shape: 'rect',
+      height: 32,
+			description: "4-directional 16-bit slot cabinet with animated reels and marquee.",
 			variants: [
-				{
-					label: "Idle",
-					render: (s) => <PokieSprite size={s} isRunning={false} />,
-				},
-				{
-					label: "Running (Animated)",
-					render: (s) => <PokieSprite size={s} isRunning={true} />,
-				},
+				<PokieSprite key="f" size={64} rotation={0} isRunning />,
+				<PokieSprite key="l" size={64} rotation={90} />,
+				<PokieSprite key="b" size={64} rotation={180} />,
+				<PokieSprite key="r" size={64} rotation={270} />,
 			],
 		},
 		{
 			id: "chair",
-			name: "16-Bit Plush Armchair",
-			category: "Objects",
-			scale: "1.0m x 1.0m (32x32px fidelity)",
-			description: "Velvet texture with deep shading.",
-			variants: [{ label: "Default", render: (s) => <ChairSprite size={s} /> }],
+			name: "Velvet Armchair",
+			category: "Object",
+      shape: 'rect',
+      height: 16,
+			description: "Classic plush casino seating with floor shadow.",
+			variants: [<ChairSprite key="c" size={64} />],
 		},
 		{
 			id: "guest",
-			name: "16-Bit Guest",
-			category: "Guests",
-			scale: "0.5m x 0.8m (16x32px fidelity)",
-			description: "Detailed visitor sprite with hair and shading.",
+			name: "Casino Guest",
+			category: "NPC",
+      shape: 'circle',
+      height: 24,
+			description: "Chibi-style character with walking bob animation and dark outline.",
 			variants: [
-				{
-					label: "Blue Visitor",
-					render: (s) => <GuestSprite size={s} color="#44aaff" />,
-				},
-				{
-					label: "Red Visitor",
-					render: (s) => <GuestSprite size={s} color="#ff4444" />,
-				},
+				<GuestSprite key="g1" size={48} color="#44aaff" isRunning />,
+				<GuestSprite key="g2" size={48} color="#ff4444" isRunning />,
 			],
+		},
+    {
+			id: "pillar",
+			name: "Stone Pillar",
+			category: "Environment",
+      shape: 'rect',
+      height: 48,
+			description: "Heavy vertical decorative pillar for demonstrating shadow depth.",
+			variants: [<PillarSprite key="p" size={64} />],
 		},
 	];
 
@@ -77,50 +89,55 @@ const SpriteAtlas: React.FC = () => {
 		setExpandedItems(next);
 	};
 
-	const expandAll = () => setExpandedItems(new Set(sprites.map((s) => s.id)));
-	const collapseAll = () => setExpandedItems(new Set());
-
 	const filtered = sprites.filter(
 		(s) =>
-			s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-			s.category.toLowerCase().includes(searchTerm.toLowerCase()),
+			s.name.toLowerCase().includes(search.toLowerCase()) ||
+			s.category.toLowerCase().includes(search.toLowerCase()),
 	);
 
 	return (
 		<div className={styles.container}>
 			<header className={styles.header}>
-				<div className={styles.titleGroup}>
-					<h1>👾 16-Bit Sprite Atlas</h1>
-					<p>32x32 Fidelity Scale Guide</p>
+				<div className={styles.titleArea}>
+					<LayoutGrid className={styles.titleIcon} />
+					<div>
+						<h1>SPRITE_ATLAS_V2</h1>
+						<p>Asset Registry & Simplified Lighting Lab</p>
+					</div>
 				</div>
 
 				<div className={styles.controls}>
-					<div className={styles.searchBar}>
-						<Search size={16} />
+          <div className={styles.lightingLab}>
+            <div className={styles.labToggle} onClick={() => setIsLightingEnabled(!isLightingEnabled)}>
+              {isLightingEnabled ? <Lightbulb color="#ffd700" /> : <LightbulbOff />}
+              <span>LIGHTING_LAB</span>
+            </div>
+            <div className={styles.sliderContainer}>
+              <Sun size={14} />
+              <input 
+                type="range" 
+                min="0" 
+                max="100" 
+                value={sunY} 
+                onChange={(e) => setSunY(Number(e.target.value))}
+                className={styles.slider}
+              />
+            </div>
+          </div>
+
+					<div className={styles.searchBox}>
+						<Search size={18} />
 						<input
-							placeholder="Search..."
-							value={searchTerm}
-							onChange={(e) => setSearchBar(e.target.value)}
+							type="text"
+							placeholder="Search assets..."
+							value={search}
+							onChange={(e) => setSearch(e.target.value)}
 						/>
 					</div>
-					<button
-						type="button"
-						onClick={expandAll}
-						className={styles.actionBtn}
-					>
-						<Maximize2 size={14} /> Expand All
-					</button>
-					<button
-						type="button"
-						onClick={collapseAll}
-						className={styles.actionBtn}
-					>
-						<Minimize2 size={14} /> Collapse All
-					</button>
 				</div>
 			</header>
 
-			<main className={styles.list}>
+			<main className={styles.grid}>
 				{filtered.map((sprite) => (
 					<section key={sprite.id} className={styles.entry}>
 						<header
@@ -129,8 +146,7 @@ const SpriteAtlas: React.FC = () => {
 						>
 							{expandedItems.has(sprite.id) ? <ChevronUp /> : <ChevronDown />}
 							<span className={styles.categoryBadge}>{sprite.category}</span>
-							<span className={styles.entryTitle}>{sprite.name}</span>
-							<span className={styles.scaleInfo}>{sprite.scale}</span>
+							<h3>{sprite.name}</h3>
 						</header>
 
 						{expandedItems.has(sprite.id) && (
@@ -141,10 +157,16 @@ const SpriteAtlas: React.FC = () => {
 										<div key={i} className={styles.variantCard}>
 											<div className={styles.checkerboard}>
 												<div className={styles.spriteWrapper}>
-													{v.render(64)}
+                          {isLightingEnabled ? (
+                            <DynamicShadow sunPos={{ x: 50, y: sunY }} shape={sprite.shape} height={sprite.height}>
+                              {v as React.ReactElement}
+                            </DynamicShadow>
+                          ) : v}
 												</div>
 											</div>
-											<span className={styles.variantLabel}>{v.label}</span>
+											<div className={styles.variantLabel}>
+												{sprite.variants.length > 1 ? `VAR_${i + 1}` : "DEFAULT"}
+											</div>
 										</div>
 									))}
 								</div>

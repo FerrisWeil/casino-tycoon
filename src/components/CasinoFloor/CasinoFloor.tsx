@@ -1,15 +1,28 @@
-import { AlertTriangle, Minus, Plus, RotateCcw } from "lucide-react";
+import {
+	Minus,
+	Plus,
+	RotateCcw,
+	AlertTriangle,
+	Sun as SunIcon,
+} from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../../store/useGameStore";
-import { ChairSprite, GuestSprite, PokieSprite } from "../Graphics/Sprites";
 import styles from "./CasinoFloor.module.css";
+import { 
+  PokieSprite, 
+  ChairSprite, 
+  GuestSprite, 
+  BackWallSprite,
+  WelcomeMatSprite,
+  PillarSprite
+} from "../Graphics/Sprites";
+import DynamicShadow from "../Graphics/DynamicShadow";
 
 const CasinoFloor: React.FC = () => {
 	const {
 		casinoState,
 		zoom,
 		setZoom,
-		zoomDuration,
 		isBuilding,
 		addObject,
 		selectObject,
@@ -18,275 +31,175 @@ const CasinoFloor: React.FC = () => {
 		selectedCustomerId,
 		rotateBuild,
 		buildRotation,
+    sunPos,
+    setSunPos,
+    showSun,
+    moveManager
 	} = useGameStore();
-	const { grid, width, height, objects, guests } = casinoState;
+	const { grid, width, height, objects, guests, managerPos } = casinoState;
 	const viewportRef = useRef<HTMLDivElement>(null);
-	const [hoveredTile, setHoveredTile] = useState<{
-		x: number;
-		y: number;
-	} | null>(null);
+	const [hoveredTile, setHoveredTile] = useState<{ x: number; y: number } | null>(null);
+  
+  const [isDraggingSun, setIsDraggingSun] = useState(false);
+  const [isPanning, setIsPanning] = useState(false);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const [lastMousePos, setLastMousePos] = useState({ x: 0, y: 0 });
+  const [hasMovedSignificantly, setHasMovedSignificantly] = useState(false);
 
-	const BASE_TILE_SIZE = 32;
-	const SUB_TILE_SIZE = BASE_TILE_SIZE / 2;
+	const BASE_TILE_SIZE = 16;
+  const totalGridWidth = (width * BASE_TILE_SIZE) + (width - 1);
+  const totalGridHeight = (height * BASE_TILE_SIZE) + (height - 1);
 
 	const fitToScreen = React.useCallback(() => {
 		if (!viewportRef.current) return;
 		const padding = 120;
 		const vWidth = viewportRef.current.clientWidth - padding;
 		const vHeight = viewportRef.current.clientHeight - padding;
-		const totalBaseWidth = width * BASE_TILE_SIZE;
-		const totalBaseHeight = height * BASE_TILE_SIZE;
-		const scaleX = vWidth / totalBaseWidth;
-		const scaleY = vHeight / totalBaseHeight;
-		setZoom(Math.min(scaleX, scaleY));
-	}, [width, height, setZoom]);
+		setZoom(Math.min(vWidth / totalGridWidth, vHeight / totalGridHeight));
+    setPanOffset({ x: 0, y: 0 });
+	}, [totalGridWidth, totalGridHeight, setZoom]);
 
-	useEffect(() => {
-		if (zoom === 1.0) fitToScreen();
-	}, [fitToScreen, zoom]);
+	useEffect(() => { if (zoom === 1.0) fitToScreen(); }, [fitToScreen, zoom]);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key.toLowerCase() === "r") rotateBuild();
+      if (isBuilding) return;
+      if (e.key.toLowerCase() === "w") moveManager(0, -1);
+      if (e.key.toLowerCase() === "s") moveManager(0, 1);
+      if (e.key.toLowerCase() === "a") moveManager(-1, 0);
+      if (e.key.toLowerCase() === "d") moveManager(1, 0);
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
-	}, [rotateBuild]);
+	}, [rotateBuild, isBuilding, moveManager]);
 
-	const handleTileClick = (
-		x: number,
-		y: number,
-		_type: string,
-		occupantId?: string,
-	) => {
-		if (isBuilding) {
-			addObject(x, y);
-			return;
-		}
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setLastMousePos({ x: e.clientX, y: e.clientY });
+    setHasMovedSignificantly(false);
+    if (!isBuilding && !isDraggingSun) setIsPanning(true);
+  };
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const dx = e.clientX - lastMousePos.x;
+    const dy = e.clientY - lastMousePos.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) setHasMovedSignificantly(true);
+
+    if (isDraggingSun && viewportRef.current) {
+      const rect = viewportRef.current.getBoundingClientRect();
+      setSunPos({ x: 50, y: ((e.clientY - rect.top) / rect.height) * 100 });
+    } else if (isPanning) {
+      setPanOffset(prev => ({ x: prev.x + dx, y: prev.y + dy }));
+    }
+    setLastMousePos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => { setIsDraggingSun(false); setIsPanning(false); };
+
+	const handleTileClick = (x: number, y: number, _type: string, occupantId?: string) => {
+		if (hasMovedSignificantly) return;
+		if (isBuilding) { addObject(x, y); return; }
 		if (occupantId) {
 			const obj = objects.find((o) => o.id === occupantId);
-			const isMachineTile = obj?.position.x === x && obj?.position.y === y;
-
-			if (isMachineTile) {
-				selectObject(occupantId);
-				return;
-			}
+			if (obj?.position.x === x && obj?.position.y === y && obj.type === 'pokie-basic') {
+        selectObject(occupantId); return;
+      }
 		}
-
-		const guest = guests?.find(
-			(g) =>
-				Math.floor(g.position.x / 2) === x &&
-				Math.floor(g.position.y / 2) === y,
-		);
-		if (guest) {
-			selectCustomer(guest.id);
-			return;
-		}
-
-		// Clear selections if clicking empty floor
-		selectObject(null);
-		selectCustomer(null);
+		const guest = guests?.find((g) => g.position.x === x && g.position.y === y);
+		if (guest) { selectCustomer(guest.id); return; }
+		selectObject(null); selectCustomer(null);
 	};
 
 	const selectedGuest = guests?.find((g) => g.id === selectedCustomerId);
+  const wallShadowX = (sunPos.x - 50) * 0.4;
 
 	return (
-		<div className={styles.viewport} ref={viewportRef}>
-			<div
-				className={styles.grid}
-				style={{
-					gridTemplateColumns: `repeat(${width}, ${BASE_TILE_SIZE}px)`,
-					gridTemplateRows: `repeat(${height}, ${BASE_TILE_SIZE}px)`,
-					transform: `scale(${zoom})`,
-					transitionDuration: `${zoomDuration}s`,
-				}}
-			>
-				{grid.map((row, y) =>
-					row.map((tile, x) => {
-						const obj = objects.find(
-							(o) =>
-								(o.position.x === x && o.position.y === y) ||
-								(o.chairPosition.x === x && o.chairPosition.y === y),
-						);
-						const isMachine = obj?.position.x === x && obj?.position.y === y;
-						const isChair =
-							obj?.chairPosition.x === x && obj?.chairPosition.y === y;
+		<div className={styles.viewport} ref={viewportRef} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} style={{ cursor: isPanning ? 'grabbing' : (isBuilding ? 'crosshair' : 'grab') }}>
+      {showSun && (
+        <div style={{ position: 'absolute', left: `50%`, top: `${sunPos.y}%`, cursor: 'grab', zIndex: 5000, color: '#ffd700', filter: 'drop-shadow(0 0 10px #f00)', transform: 'translate(-50%, -50%)' }} onMouseDown={(e) => { e.stopPropagation(); setIsDraggingSun(true); }}>
+          <SunIcon size={48} fill="currentColor" />
+        </div>
+      )}
 
-						const isVisibleByGuest = selectedGuest?.visionTiles.some(
-							(p) => p.x === x && p.y === y,
-						);
+			<div className={styles.room} style={{ transform: `translate(${panOffset.x}px, ${panOffset.y}px) scale(${zoom})`, width: totalGridWidth, height: totalGridHeight, transition: isPanning ? 'none' : 'transform 0.1s ease-out' }}>
+        <div className={styles.backWall}><BackWallSprite width={totalGridWidth} /></div>
+        <div className={styles.floorContainer}>
+          <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '32px', background: 'linear-gradient(rgba(0,0,0,0.4), transparent)', transform: `skewX(${wallShadowX}deg)`, transformOrigin: 'top', pointerEvents: 'none', zIndex: 5 }} />
+          
+          <div className={styles.grid} style={{ gridTemplateColumns: `repeat(${width}, ${BASE_TILE_SIZE}px)`, gridTemplateRows: `repeat(${height}, ${BASE_TILE_SIZE}px)`, width: totalGridWidth, height: totalGridHeight }}>
+            {grid.map((row, y) =>
+              row.map((tile, x) => {
+                const isEntrance = x === 3 && y === 6;
+                const isVisibleByGuest = selectedGuest?.visionTiles.some((p) => p.x === x && p.y === y);
+                return (
+                  <div key={tile.id} className={`${styles.tile} ${styles[tile.type]} ${isBuilding ? styles.interactable : ""}`} style={{ width: BASE_TILE_SIZE, height: BASE_TILE_SIZE, backgroundColor: isVisibleByGuest ? "rgba(255, 255, 0, 0.1) " : undefined, border: 'none' }} onClick={isBuilding ? () => handleTileClick(x, y, tile.type, tile.occupantId) : undefined}>
+                    {isEntrance && <WelcomeMatSprite size={16} />}
+                  </div>
+                );
+              }),
+            )}
 
-						// Ghost Logic
-						let ghostType: "none" | "machine" | "chair" = "none";
-						if (isBuilding && hoveredTile) {
-							const chairY =
-								buildRotation === 0
-									? hoveredTile.y + 1
-									: buildRotation === 180
-										? hoveredTile.y - 1
-										: hoveredTile.y;
-							const chairX =
-								buildRotation === 90
-									? hoveredTile.x - 1
-									: buildRotation === 270
-										? hoveredTile.x + 1
-										: hoveredTile.x;
-							if (hoveredTile.x === x && hoveredTile.y === y)
-								ghostType = "machine";
-							else if (chairX === x && chairY === y) ghostType = "chair";
-						}
+            {/* ENTITY LAYER: Objects, Guests, Manager - Y-Sorted */}
+            {objects.map((obj) => {
+              const isPillar = obj.type === 'pillar';
+              const isSelected = obj.id === selectedObjectId;
+              const zIndex = 100 + (obj.position.y * 10);
 
-						const guestAtTile = guests?.find(
-							(g) =>
-								Math.floor(g.position.x / 2) === x &&
-								Math.floor(g.position.y / 2) === y,
-						);
+              return (
+                <div 
+                  key={obj.id}
+                  className={`${styles.entityWrapper} ${isSelected ? styles.selected : ""}`}
+                  style={{ 
+                    position: 'absolute', 
+                    left: obj.position.x * (BASE_TILE_SIZE + 1), 
+                    top: obj.position.y * (BASE_TILE_SIZE + 1),
+                    width: BASE_TILE_SIZE,
+                    height: BASE_TILE_SIZE,
+                    zIndex,
+                    pointerEvents: obj.type === 'pokie-basic' ? 'all' : 'none'
+                  }}
+                  onClick={obj.type === 'pokie-basic' ? () => handleTileClick(obj.position.x, obj.position.y, 'floor', obj.id) : undefined}
+                >
+                  <DynamicShadow sunPos={sunPos} shape="rect" height={obj.visualHeight}>
+                    {isPillar ? <PillarSprite size={16} /> : <PokieSprite size={16} isRunning={obj.isRunning} rotation={obj.rotation} />}
+                  </DynamicShadow>
+                  
+                  {!isPillar && (
+                    <div style={{ position: 'absolute', left: (obj.chairPosition.x - obj.position.x) * (BASE_TILE_SIZE+1), top: (obj.chairPosition.y - obj.position.y) * (BASE_TILE_SIZE+1), width: 16, height: 16 }}>
+                       <DynamicShadow sunPos={sunPos} shape="rect" height={16}><ChairSprite size={16} /></DynamicShadow>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
-						const isInteractable = isBuilding || isMachine || guestAtTile;
-						const isSelected = isMachine && obj?.id === selectedObjectId;
+            {guests?.map((g) => {
+              const isSelectedGuest = g.id === selectedCustomerId;
+              const zIndex = 100 + (g.position.y * 10) + 5;
+              return (
+                <div key={g.id} style={{ position: "absolute", left: g.position.x * (BASE_TILE_SIZE + 1), top: g.position.y * (BASE_TILE_SIZE + 1), width: BASE_TILE_SIZE, height: BASE_TILE_SIZE, transition: "all 0.5s linear", zIndex, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={() => selectCustomer(g.id)}>
+                  <DynamicShadow sunPos={sunPos} shape="circle" height={24}><GuestSprite size={24} color={g.id.includes("guest-a") ? "#ff4444" : "#44aaff"} isRunning={g.path.length > 0} /></DynamicShadow>
+                </div>
+              );
+            })}
 
-						return (
-							<button
-								key={tile.id}
-								type="button"
-								className={`${styles.tile} ${styles[tile.type]} ${isInteractable ? styles.interactable : ""} ${isSelected ? styles.selected : ""}`}
-								style={{
-									width: BASE_TILE_SIZE,
-									height: BASE_TILE_SIZE,
-									position: "relative",
-									backgroundColor: isVisibleByGuest
-										? "rgba(255, 255, 0, 0.15)"
-										: undefined,
-								}}
-								aria-label={`Tile ${x},${y}`}
-								onClick={() =>
-									handleTileClick(x, y, tile.type, tile.occupantId)
-								}
-								onMouseEnter={() => setHoveredTile({ x, y })}
-								onMouseLeave={() => setHoveredTile(null)}
-							>
-								{isMachine && (
-									<div style={{ position: "relative" }}>
-										<PokieSprite
-											size={BASE_TILE_SIZE}
-											isRunning={obj.isRunning}
-										/>
-										{obj.isUnreachable && (
-											<div style={{ position: "absolute", top: -5, right: -5 }}>
-												<AlertTriangle size={12} color="#ff4444" />
-											</div>
-										)}
-									</div>
-								)}
-								{isChair && <ChairSprite size={BASE_TILE_SIZE} />}
+            <div style={{ position: "absolute", left: managerPos.x * (BASE_TILE_SIZE + 1), top: managerPos.y * (BASE_TILE_SIZE + 1), width: BASE_TILE_SIZE, height: BASE_TILE_SIZE, transition: "all 0.15s linear", zIndex: 100 + (managerPos.y * 10) + 6, display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <DynamicShadow sunPos={sunPos} shape="circle" height={24}><GuestSprite size={24} color="#800080" isRunning={false} /></DynamicShadow>
+            </div>
 
-								{/* Ghost Render */}
-								{ghostType === "machine" && (
-									<div style={{ opacity: 0.4 }}>
-										<PokieSprite size={BASE_TILE_SIZE} />
-									</div>
-								)}
-								{ghostType === "chair" && (
-									<div style={{ opacity: 0.3 }}>
-										<ChairSprite size={BASE_TILE_SIZE} />
-									</div>
-								)}
-
-								{tile.type === "entrance" && (
-									<div
-										style={{
-											width: "4px",
-											height: "100%",
-											background: "#0f0",
-											position: "absolute",
-											left: 0,
-										}}
-									/>
-								)}
-							</button>
-						);
-					}),
-				)}
-
-				{/* High-Fidelity Guest Layer */}
-				{guests?.map((g) => {
-					const patienceColor =
-						g.patience > 60 ? "#4f4" : g.patience > 30 ? "#ff0" : "#f44";
-					const isSelectedGuest = g.id === selectedCustomerId;
-
-					return (
-						<div
-							key={g.id}
-							style={{
-								position: "absolute",
-								left: g.position.x * SUB_TILE_SIZE,
-								top: g.position.y * SUB_TILE_SIZE,
-								width: SUB_TILE_SIZE,
-								height: SUB_TILE_SIZE,
-								transition: "all 0.5s linear",
-								pointerEvents: "none",
-								zIndex: 100,
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								// Highlight the specific sub-tile the guest is on if selected
-								background: isSelectedGuest
-									? "rgba(255, 215, 0, 0.2)"
-									: undefined,
-								boxShadow: isSelectedGuest
-									? "0 0 10px var(--pixel-accent)"
-									: undefined,
-							}}
-						>
-							<GuestSprite
-								size={SUB_TILE_SIZE}
-								color={g.id.includes("guest-a") ? "#ff4444" : "#44aaff"}
-							/>
-							{isSelectedGuest && (
-								<div className={styles.customerPopup}>
-									<b>Guest</b>
-									<br />
-									Cash: ${g.cash.toFixed(2)}
-									<br />
-									Patience:{" "}
-									<span style={{ color: patienceColor }}>
-										{Math.floor(g.patience)}%
-									</span>
-								</div>
-							)}
-						</div>
-					);
-				})}
+            {isBuilding && hoveredTile && (
+              <div style={{ position: 'absolute', left: hoveredTile.x * (BASE_TILE_SIZE + 1), top: hoveredTile.y * (BASE_TILE_SIZE + 1), width: 16, height: 16, zIndex: 1000, pointerEvents: 'none', opacity: 0.4 }}>
+                {selectedObject === 'pillar' ? <PillarSprite size={16} /> : <PokieSprite size={16} rotation={buildRotation} />}
+              </div>
+            )}
+          </div>
+        </div>
 			</div>
 
 			<div className={styles.controls}>
-				<button
-					type="button"
-					className={styles.controlBtn}
-					onClick={() => setZoom(zoom + 0.2)}
-					title="Zoom In"
-				>
-					<Plus size={20} />
-				</button>
-				<div className={styles.separator} />
-				<button
-					type="button"
-					className={styles.controlBtn}
-					onClick={() => fitToScreen()}
-					title="Reset Zoom"
-				>
-					<RotateCcw size={18} />
-				</button>
-				<div className={styles.separator} />
-				<button
-					type="button"
-					className={styles.controlBtn}
-					onClick={() => setZoom(Math.max(0.1, zoom - 0.2))}
-					title="Zoom Out"
-				>
-					<Minus size={20} />
-				</button>
+				<button type="button" className={styles.controlBtn} onClick={() => setZoom(zoom + 0.2)} title="Zoom In"><Plus size={20} /></button>
+				<div className={styles.separator} /><button type="button" className={styles.controlBtn} onClick={() => fitToScreen()} title="Reset View"><RotateCcw size={18} /></button>
+				<div className={styles.separator} /><button type="button" className={styles.controlBtn} onClick={() => setZoom(Math.max(0.1, zoom - 0.2))} title="Zoom Out"><Minus size={20} /></button>
 			</div>
 		</div>
 	);

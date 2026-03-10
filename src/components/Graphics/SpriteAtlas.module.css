@@ -1,160 +1,196 @@
 .container {
-	width: 100vw;
-	height: 100vh;
-	background: #0a0a0a;
-	color: #eee;
-	display: flex;
-	flex-direction: column;
-	font-family: "Courier New", monospace;
-	overflow: hidden;
+  padding: 40px;
+  background: #0a0a0a;
+  min-height: 100vh;
+  color: #eee;
+  font-family: 'Courier New', Courier, monospace;
 }
 
 .header {
-	padding: 2rem;
-	background: #111;
-	border-bottom: 4px solid #333;
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 40px;
+  border-bottom: 4px solid #222;
+  padding-bottom: 20px;
 }
 
-.titleGroup h1 {
-	margin: 0;
-	font-size: 1.5rem;
-	color: #ffd700;
+.titleArea {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
-.titleGroup p {
-	margin: 0.5rem 0 0;
-	font-size: 0.8rem;
-	opacity: 0.5;
+
+.titleIcon {
+  width: 48px;
+  height: 48px;
+  color: var(--pixel-accent);
+}
+
+.titleArea h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 2px;
+}
+
+.titleArea p {
+  margin: 5px 0 0;
+  color: #666;
+  font-size: 0.9rem;
 }
 
 .controls {
-	display: flex;
-	gap: 1rem;
-	align-items: center;
+  display: flex;
+  gap: 20px;
+  align-items: center;
 }
 
-.searchBar {
-	background: #000;
-	border: 4px solid #444;
-	padding: 0.5rem 1rem;
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
+/* Lighting Lab Styles */
+.lightingLab {
+  display: flex;
+  align-items: center;
+  background: #111;
+  border: 2px solid #333;
+  padding: 5px 15px;
+  gap: 20px;
 }
 
-.searchBar input {
-	background: transparent;
-	border: none;
-	color: #fff;
-	outline: none;
+.labToggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: bold;
 }
 
-.actionBtn {
-	background: #222;
-	border: 4px solid #444;
-	color: #aaa;
-	font-size: 0.75rem;
-	padding: 0.5rem 1rem;
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
+.sliderContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.list {
-	flex: 1;
-	overflow-y: auto;
-	padding: 2rem;
-	display: flex;
-	flex-direction: column;
-	gap: 1.5rem; /* Increased gap */
+.slider {
+  appearance: none;
+  width: 150px;
+  height: 4px;
+  background: #333;
+  outline: none;
+}
+
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: var(--pixel-accent);
+  cursor: pointer;
+  border-radius: 0;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  background: #151515;
+  border: 2px solid #333;
+  padding: 8px 15px;
+  gap: 10px;
+}
+
+.searchBox input {
+  background: transparent;
+  border: none;
+  color: #fff;
+  outline: none;
+  width: 200px;
+}
+
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .entry {
-	background: #151515;
-	border: 4px solid #333;
-	display: flex;
-	flex-direction: column;
+  background: #151515;
+  border: 2px solid #222;
 }
 
 .entryHeader {
-	padding: 1.25rem;
-	background: #1a1a1a;
-	display: flex;
-	align-items: center;
-	gap: 1rem;
-	cursor: pointer;
-	user-select: none;
+  display: flex;
+  align-items: center;
+  padding: 15px 20px;
+  gap: 15px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.entryHeader:hover {
+  background: #1a1a1a;
+}
+
+.entryHeader h3 {
+  margin: 0;
+  font-size: 1.1rem;
 }
 
 .categoryBadge {
-	font-size: 0.6rem;
-	background: #333;
-	padding: 4px 8px;
-	text-transform: uppercase;
-}
-
-.entryTitle {
-	font-weight: bold;
-	flex: 1;
-	font-size: 1.1rem;
-}
-.scaleInfo {
-	font-size: 0.7rem;
-	opacity: 0.4;
+  background: #222;
+  color: #888;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+  font-weight: bold;
+  letter-spacing: 1px;
 }
 
 .entryContent {
-	padding: 2rem;
-	border-top: 2px solid #222;
-	background: #121212;
+  padding: 20px;
+  border-top: 2px solid #222;
 }
 
 .description {
-	font-size: 0.9rem;
-	opacity: 0.7;
-	margin-bottom: 2rem;
+  color: #888;
+  font-size: 0.9rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
 }
 
 .variantGrid {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-	gap: 2.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 20px;
 }
 
 .variantCard {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	gap: 1rem;
+  background: #111;
+  border: 2px solid #222;
+  overflow: hidden;
 }
 
-/* 1m x 1m Square Grid Scale */
 .checkerboard {
-	width: 128px;
-	height: 128px;
-	background-color: #111;
-	background-image:
-		linear-gradient(#1a1a1a 2px, transparent 2px),
-		linear-gradient(90deg, #1a1a1a 2px, transparent 2px);
-	background-size: 32px 32px; /* 1 Meter squares */
-	border: 4px solid #222;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	position: relative;
+  height: 140px;
+  background-image: 
+    linear-gradient(45deg, #181818 25%, transparent 25%),
+    linear-gradient(-45deg, #181818 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #181818 75%),
+    linear-gradient(-45deg, transparent 75%, #181818 75%);
+  background-size: 20px 20px;
+  background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid #222;
 }
 
 .spriteWrapper {
-	image-rendering: pixelated;
-	display: flex;
-	align-items: center;
-	justify-content: center;
+  /* Scale up sprites for better viewing */
+  transform: scale(1);
+  image-rendering: pixelated;
 }
 
 .variantLabel {
-	font-size: 0.75rem;
-	color: #aaa;
-	font-weight: bold;
+  padding: 10px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: #555;
+  background: #0a0a0a;
 }

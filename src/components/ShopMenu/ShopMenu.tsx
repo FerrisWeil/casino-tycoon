@@ -1,4 +1,4 @@
-import { ChevronDown, Dices as SlotIcon, X } from "lucide-react";
+import { ChevronDown, Dices as SlotIcon, X, Box } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { useGameStore } from "../../store/useGameStore";
@@ -28,6 +28,12 @@ const ShopMenu: React.FC = () => {
 			cost: currentPrice,
 			icon: <SlotIcon size={20} />,
 		},
+    {
+      id: "pillar",
+      name: "Stone Pillar",
+      cost: 0,
+      icon: <Box size={20} />, // Changed icon to Box for pillar
+    }
 	];
 
 	const handleSelectItem = (id: GameObjectType) => {

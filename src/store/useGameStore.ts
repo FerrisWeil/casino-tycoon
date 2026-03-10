@@ -1,19 +1,14 @@
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { Casino } from "../simulation/Casino";
-import type {
-	CasinoState,
-	GameObjectType,
-	PokieSettings,
-	TileType,
-} from "../types";
+import type { CasinoState, GameObjectType, PokieSettings, TileType, Point } from "../types";
 
 interface GameState {
 	money: number;
 	reputation: number;
 	casinoState: CasinoState;
 	currentSlot: number;
-	isHydrated: boolean; // Safety lock
+  isHydrated: boolean;
 
 	// Day State
 	isOpen: boolean;
@@ -22,6 +17,10 @@ interface GameState {
 	dailyEarnings: number;
 	dailySpend: number;
 	isPaused: boolean;
+
+  // Light State
+  sunPos: Point;
+  showSun: boolean;
 
 	_sim: Casino;
 	_logs: string[];
@@ -46,7 +45,10 @@ interface GameState {
 	selectObject: (id: string | null) => void;
 	selectCustomer: (id: string | null) => void;
 	tick: (dt: number) => void;
+  moveManager: (dx: number, dy: number) => void;
 	setZoom: (level: number) => void;
+  setSunPos: (pos: Point) => void;
+  toggleSun: () => void;
 	resetGame: () => void;
 	toggleOpen: () => void;
 	togglePause: () => void;
@@ -70,17 +72,16 @@ const getInitialState = () => {
 		selectedObjectId: null,
 		selectedCustomerId: null,
 		buildRotation: 0,
-		currentSlot: Number.parseInt(
-			localStorage.getItem("casino-current-slot") || "1",
-			10,
-		),
+		currentSlot: Number.parseInt(localStorage.getItem("casino-current-slot") || "1", 10),
 		isOpen: false,
 		day: 1,
 		dayTimer: 0,
 		dailyEarnings: 0,
 		dailySpend: 0,
 		isPaused: false,
-		isHydrated: false,
+    isHydrated: false,
+    sunPos: { x: 50, y: 20 },
+    showSun: false,
 	};
 };
 
@@ -94,10 +95,21 @@ export const useGameStore = create<GameState>()(
 				if (s._logs.length > 50) s._logs.shift();
 			}),
 
-		togglePause: () =>
-			set((s) => {
-				s.isPaused = !s.isPaused;
-			}),
+		togglePause: () => set((s) => { s.isPaused = !s.isPaused; }),
+
+    setSunPos: (pos) => set((s) => { s.sunPos = pos; }),
+    
+    toggleSun: () => set((s) => { s.showSun = !s.showSun; }),
+
+    moveManager: (dx, dy) => {
+      set((s) => {
+        const next = { x: s.casinoState.managerPos.x + dx, y: s.casinoState.managerPos.y + dy };
+        if (!s._sim.isBlocked(next)) {
+          s.casinoState.managerPos = next;
+          s._sim.managerPos = next;
+        }
+      });
+    },
 
 		toggleOpen: () => {
 			set((s) => {
@@ -168,7 +180,7 @@ export const useGameStore = create<GameState>()(
 			const state = get();
 			const sim = state._sim;
 			const isFirst = state.casinoState.objects.length === 0;
-			const cost = isFirst ? 0 : 1000;
+			const cost = (state.selectedObject === 'pillar') ? 0 : (isFirst ? 0 : 1000);
 
 			if (state.money < cost) {
 				get().addLog(`Build: Insufficient funds ($${cost})`);
@@ -220,43 +232,33 @@ export const useGameStore = create<GameState>()(
 			}
 		},
 
-		selectObject: (id) =>
-			set((s) => {
-				s.selectedObjectId = id;
-			}),
-		selectCustomer: (id) =>
-			set((s) => {
-				s.selectedCustomerId = id;
-			}),
+		selectObject: (id) => set((s) => { s.selectedObjectId = id; }),
+		selectCustomer: (id) => set((s) => { s.selectedCustomerId = id; }),
 
 		resetGame: () => {
-			get().addLog("RESETTING TO SLOT 0...");
-			const fresh = getInitialState();
 			set((s) => {
-				Object.assign(s, fresh);
+				Object.assign(s, getInitialState());
 				s.currentSlot = 0;
-				s.isHydrated = true;
+        s.isHydrated = true;
 			});
-			localStorage.setItem("casino-current-slot", "0");
-			get()
-				.saveGame(0)
-				.then(() => window.location.reload());
+      localStorage.setItem("casino-current-slot", "0");
+			get().saveGame(0).then(() => window.location.reload());
 		},
 
 		loadGame: async (slot?: number) => {
 			const targetSlot = slot ?? get().currentSlot;
-
+			
 			if (targetSlot === 0) {
 				const fresh = getInitialState();
 				set((state) => {
 					Object.assign(state, fresh);
 					state.currentSlot = 0;
-					state._sim = new Casino(7, 7);
-					state.isHydrated = true;
+          state._sim = new Casino(7, 7);
+          state.isHydrated = true;
 				});
-				localStorage.setItem("casino-current-slot", "0");
+        localStorage.setItem("casino-current-slot", "0");
 				get().addLog("Slot 0 Reset Loaded");
-				get().saveGame(0);
+        get().saveGame(0);
 				return;
 			}
 
@@ -264,7 +266,10 @@ export const useGameStore = create<GameState>()(
 				const res = await fetch(`/api/save-game?slot=${targetSlot}`);
 				if (res.ok) {
 					const data = await res.json();
-					const sim = new Casino(7, 7, data.casinoState);
+          // Use stored width/height or default to 7
+          const w = data.casinoState?.width || 7;
+          const h = data.casinoState?.height || 7;
+					const sim = new Casino(w, h, data.casinoState);
 					set((state) => {
 						state.money = data.money;
 						state.reputation = data.reputation;
@@ -276,28 +281,27 @@ export const useGameStore = create<GameState>()(
 						state.dailyEarnings = data.dailyEarnings ?? 0;
 						state.dailySpend = data.dailySpend ?? 0;
 						state.isPaused = data.isPaused ?? false;
+            state.sunPos = data.sunPos ?? { x: 50, y: 20 };
+            state.showSun = data.showSun ?? false;
+            state.casinoState.managerPos = data.casinoState?.managerPos || { x: 3, y: 5 };
 						state._sim = sim;
+            state._sim.managerPos = state.casinoState.managerPos;
 						state.currentSlot = targetSlot;
-						state.isHydrated = true;
+            state.isHydrated = true;
 					});
-					localStorage.setItem("casino-current-slot", targetSlot.toString());
+          localStorage.setItem("casino-current-slot", targetSlot.toString());
 					get().addLog(`Loaded Slot ${targetSlot}`);
 				} else {
-					// If load fails, we are still "hydrated" with defaults
-					set((s) => {
-						s.isHydrated = true;
-					});
-				}
+          set(s => { s.isHydrated = true; });
+        }
 			} catch (_e) {
 				get().addLog(`Slot ${targetSlot} not found`);
-				set((s) => {
-					s.isHydrated = true;
-				});
+        set(s => { s.isHydrated = true; });
 			}
 		},
 
 		saveGame: async (slot?: number) => {
-			if (!get().isHydrated) return; // CRITICAL: Prevent default overwrite
+      if (!get().isHydrated) return;
 
 			const state = get();
 			const targetSlot = slot ?? state.currentSlot;
@@ -312,6 +316,8 @@ export const useGameStore = create<GameState>()(
 				dailyEarnings: state.dailyEarnings,
 				dailySpend: state.dailySpend,
 				isPaused: state.isPaused,
+        sunPos: state.sunPos,
+        showSun: state.showSun,
 			};
 			try {
 				await fetch(`/api/save-game?slot=${targetSlot}`, {

@@ -33,10 +33,6 @@ body {
 .pixel-panel {
 	background: var(--pixel-bg);
 	border: var(--pixel-size) solid var(--pixel-border);
-	box-shadow:
-		inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0px #000,
-		inset var(--pixel-size) var(--pixel-size) 0px #666;
-	position: relative;
 }
 
 button {
@@ -49,10 +45,6 @@ button {
 	background-color: #333;
 	cursor: pointer;
 	color: #fff;
-	box-shadow:
-		inset calc(var(--pixel-size) * -1) calc(var(--pixel-size) * -1) 0px #111,
-		inset var(--pixel-size) var(--pixel-size) 0px #555;
-	transition: transform 0.1s;
 }
 
 button:hover {
@@ -60,8 +52,7 @@ button:hover {
 }
 
 button:active {
-	transform: translate(2px, 2px);
-	box-shadow: none;
+  /* PURGED: No more translate(2px, 2px) */
 }
 
 button:disabled {

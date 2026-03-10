@@ -35,11 +35,15 @@ const DevShell: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 					"  help        - Show this list",
 					"  clear       - Clear the console",
 					"  reset       - RESET TO SLOT 0",
+          "  sun         - Toggle draggable sun icon",
 					"  money = X   - Set money to X",
 					"  addmoney X  - Add X to current money",
 				]);
 			} else if (cmd === "clear") {
 				setLocalLogs(["Console cleared."]);
+			} else if (cmd === "sun") {
+        state.toggleSun();
+        setLocalLogs((prev) => [...prev, `Sun visible: ${!state.showSun}`]);
 			} else if (cmd === "reset") {
 				state.resetGame();
 			} else if (trimmed.startsWith("money = ")) {

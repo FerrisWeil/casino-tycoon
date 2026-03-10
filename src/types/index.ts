@@ -1,5 +1,5 @@
 export type TileType = "floor" | "wall" | "entrance" | "void";
-export type GameObjectType = "pokie-basic";
+export type GameObjectType = "pokie-basic" | "pillar";
 
 export interface Point {
 	x: number;
@@ -7,8 +7,8 @@ export interface Point {
 }
 
 export interface SubPoint {
-	x: number;
-	y: number;
+  x: number;
+  y: number;
 }
 
 export interface Tile {
@@ -18,45 +18,37 @@ export interface Tile {
 	occupantId?: string;
 }
 
-export interface JackpotSettings {
-	size: number;
-	chance: number;
-}
-
 export interface PokieSettings {
 	pokeInterval: number;
 	wager: number;
-	grand: JackpotSettings;
-	major: JackpotSettings;
-	minor: JackpotSettings;
-	mini: JackpotSettings;
+	grand: { size: number; chance: number };
+	major: { size: number; chance: number };
+	minor: { size: number; chance: number };
+	mini: { size: number; chance: number };
 	additionalRtp: number;
-}
-
-export interface PokeResult {
-	payout: number;
-	wager: number;
-}
-
-export interface PokieStats {
-	history: PokeResult[];
-	totalWagered: number;
-	totalPaid: number;
-	pokesCount: number;
-	runningRtp: number;
 }
 
 export interface GameObject {
 	id: string;
 	type: GameObjectType;
 	position: Point;
-	chairPosition: Point; // Restored for logic/tests
-	subTiles: SubPoint[];
-	chairSubTiles: SubPoint[];
-	rotation: number;
+  chairPosition: Point;
+  // Bounding & Physics
+  subTiles: SubPoint[]; // Full visual footprint
+  solidSubTiles: SubPoint[]; // Physical collision area
+  chairSubTiles: SubPoint[];
+  visualHeight: number; // Pixels tall
+  
+  rotation: number;
 	isRunning: boolean;
 	settings: PokieSettings;
-	stats: PokieStats;
+	stats: {
+    history: { payout: number; wager: number }[];
+    totalWagered: number;
+    totalPaid: number;
+    pokesCount: number;
+    runningRtp: number;
+  };
 	occupantId?: string;
 	isUnreachable?: boolean;
 }
@@ -89,4 +81,7 @@ export interface CasinoState {
 	dayTimer: number;
 	isPaused: boolean;
 	lastReport?: DailyReport;
+  sunPos: Point;
+  showSun: boolean;
+  managerPos: Point; // Added for WASD control
 }
