@@ -1,10 +1,11 @@
-import { Clock, Coins, Play, Square } from "lucide-react";
+import { Clock, Coins } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { HashRouter, Route, Routes, useLocation } from "react-router-dom";
 import CasinoFloor from "./components/CasinoFloor/CasinoFloor";
 import DesignLab from "./components/DesignLab/DesignLab";
 import DevShell from "./components/DevShell/DevShell";
 import EndOfDayDialog from "./components/EndOfDayDialog/EndOfDayDialog";
+import SpriteAtlas from "./components/Graphics/SpriteAtlas";
 import PokieDialog from "./components/PokieDialog/PokieDialog";
 import ShopMenu from "./components/ShopMenu/ShopMenu";
 import { useGameStore } from "./store/useGameStore";
@@ -37,7 +38,6 @@ function GameView() {
 		return () => cancelAnimationFrame(frameId);
 	}, [tick, loadGame]);
 
-	// Auto-save every 5 seconds
 	const { saveGame } = useGameStore();
 	useEffect(() => {
 		const interval = setInterval(() => {
@@ -76,96 +76,137 @@ function GameView() {
 				background: "#000",
 			}}
 		>
-			{/* Static Block Header */}
+			{/* 16-Bit Style Header */}
 			<header
 				style={{
 					width: "100%",
-					height: "60px",
+					height: "70px",
 					display: "flex",
-					gap: "2rem",
 					padding: "0 2rem",
-					background: "#151515",
-					borderBottom: "2px solid #333",
+					background: "#1a1a1a",
+					borderBottom: "4px solid #333",
 					alignItems: "center",
 					justifyContent: "space-between",
 					zIndex: 1000,
 					flexShrink: 0,
+					boxShadow: "inset 0 -4px 0 #000, 0 4px 20px rgba(0,0,0,0.5)",
 				}}
 			>
-				<div style={{ display: "flex", gap: "2rem", alignItems: "center" }}>
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "0.5rem",
-							color: "#aaa",
-						}}
-					>
-						<Clock size={16} />
+				<div style={{ display: "flex", gap: "3rem", alignItems: "center" }}>
+					<div style={{ display: "flex", flexDirection: "column" }}>
 						<span
-							style={{ fontSize: "0.9rem", fontWeight: "bold", color: "#eee" }}
+							style={{
+								fontSize: "0.65rem",
+								color: "#666",
+								fontWeight: "bold",
+								textTransform: "uppercase",
+							}}
 						>
-							Day {day} ({formatTime(dayTimer)})
+							Chronometer
 						</span>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
+								color: "#eee",
+							}}
+						>
+							<Clock size={14} />
+							<span style={{ fontSize: "1rem", fontWeight: "bold" }}>
+								Day {day}
+							</span>
+							<span style={{ fontSize: "0.8rem", color: "#0f0" }}>
+								[{formatTime(dayTimer)}]
+							</span>
+						</div>
 					</div>
-					<div
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "0.5rem",
-							color: "#ffd700",
-						}}
-					>
-						<Coins size={20} />
-						<span style={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-							${money.toFixed(2)}
-						</span>
-					</div>
-					{!isHydrated && (
-						<span style={{ color: "#ff4444", fontSize: "10px" }}>
-							Loading...
-						</span>
-					)}
-					{isHydrated && (
-						<span style={{ color: "#44ff44", fontSize: "8px", opacity: 0.5 }}>
-							● Syncing
-						</span>
-					)}
-				</div>
 
+					<div style={{ display: "flex", flexDirection: "column" }}>
+						<span
+							style={{
+								fontSize: "0.65rem",
+								color: "#666",
+								fontWeight: "bold",
+								textTransform: "uppercase",
+							}}
+						>
+							Available Funds
+						</span>
+						<div
+							style={{
+								display: "flex",
+								alignItems: "center",
+								gap: "0.5rem",
+								color: "#ffd700",
+							}}
+						>
+							<Coins size={18} />
+							<span style={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+								${money.toFixed(2)}
+							</span>
+						</div>
+					</div>
+
+					<div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+						{!isHydrated && (
+							<span
+								style={{
+									color: "#ff4444",
+									fontSize: "10px",
+									fontWeight: "bold",
+								}}
+							>
+								OFFLINE
+							</span>
+						)}
+						{isHydrated && (
+							<>
+								<div
+									style={{
+										width: "6px",
+										height: "6px",
+										background: "#0f0",
+										borderRadius: "50%",
+									}}
+								/>
+								<span
+									style={{
+										color: "#0f0",
+										fontSize: "10px",
+										fontWeight: "bold",
+										opacity: 0.7,
+									}}
+								>
+									SYNC_OK
+								</span>
+							</>
+						)}
+					</div>
+				</div>
 				<button
 					type="button"
 					onClick={() => toggleOpen()}
 					style={{
-						padding: "8px 24px",
-						borderRadius: "4px",
-						fontSize: "0.85rem",
-						fontWeight: "bold",
-						background: isOpen ? "#442222" : "#224422",
-						border: `2px solid ${isOpen ? "#f44" : "#4f4"}`,
-						display: "flex",
-						alignItems: "center",
-						gap: "0.5rem",
+						padding: "10px 24px",
+						fontSize: "0.9rem",
+						background: isOpen ? "#600" : "#060",
+						border: "4px solid #000",
+						boxShadow: isOpen ? "inset 2px 2px 0 #900" : "inset 2px 2px 0 #0a0",
 						color: "#fff",
-						boxShadow: "none",
+						marginLeft: "auto",
+						marginRight: "1rem",
 					}}
 				>
-					{isOpen ? (
-						<>
-							<Square size={14} fill="currentColor" /> Close Casino
-						</>
-					) : (
-						<>
-							<Play size={14} fill="currentColor" /> Open Casino ($500)
-						</>
-					)}
+					{isOpen ? "CLOSE_CASINO" : `OPEN_CASINO ($500)`}
 				</button>
+
+				<ShopMenu />
 			</header>
 
 			{/* Main Game Area */}
 			<main style={{ flex: 1, position: "relative", overflow: "hidden" }}>
 				<CasinoFloor />
-				<ShopMenu />
 				<PokieDialog />
 				<EndOfDayDialog />
 			</main>
@@ -185,6 +226,7 @@ function App() {
 			<Routes>
 				<Route path="/" element={<GameView />} />
 				<Route path="/design-lab" element={<DesignLab />} />
+				<Route path="/sprites" element={<SpriteAtlas />} />
 			</Routes>
 		</HashRouter>
 	);

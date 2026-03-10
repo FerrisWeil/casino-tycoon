@@ -1,9 +1,9 @@
-import type { GuestState, Point } from "../types";
+import type { GameObject, GuestState, Point, SubPoint } from "../types";
 import { Pathfinder } from "./Pathfinder";
 
 export class Guest {
 	private moveTimer = 0;
-	private data: GuestState; // Explicitly declared property
+	private data: GuestState;
 
 	public static createRandom(id: string, entrance: Point): GuestState {
 		return {
@@ -12,7 +12,7 @@ export class Guest {
 			patience: Math.floor(Math.random() * 51) + 50,
 			consecutiveLosses: 0,
 			isLeaving: false,
-			position: { ...entrance },
+			position: { x: entrance.x * 2, y: entrance.y * 2 },
 			path: [],
 			visionTiles: [],
 		};
@@ -28,25 +28,28 @@ export class Guest {
 
 	public update(
 		dt: number,
-		casino: { width: number; height: number; isBlocked: (p: Point) => boolean },
+		casino: {
+			width: number;
+			height: number;
+			isBlocked: (p: SubPoint) => boolean;
+			isOccupiedByGuest: (p: SubPoint, id: string) => boolean;
+		},
 	) {
-		this.data.visionTiles = Pathfinder.getVision(
-			this.data.position,
-			5,
-			casino.width,
-			casino.height,
-			casino.isBlocked,
-		);
-
 		if (this.data.path.length > 0) {
 			this.moveTimer += dt;
-			if (this.moveTimer >= 1.0) {
+			if (this.moveTimer >= 0.5) {
+				// 0.5s per sub-tile = 1s per tile
 				this.moveTimer = 0;
-				const nextStep = this.data.path.shift();
-				if (nextStep) {
-					this.data.position = nextStep;
-					this.data.patience -= 1;
+				const nextStep = this.data.path[0];
+
+				// Dynamic Obstacle Avoidance: Wait if another guest is in the way
+				if (casino.isOccupiedByGuest(nextStep, this.data.id)) {
+					return;
 				}
+
+				this.data.path.shift();
+				this.data.position = nextStep;
+				this.data.patience -= 0.5;
 			}
 		} else if (!this.data.targetObjectId && !this.data.isLeaving) {
 			if (Math.random() < 0.05) {
@@ -62,22 +65,24 @@ export class Guest {
 	private wander(casino: {
 		width: number;
 		height: number;
-		isBlocked: (p: Point) => boolean;
+		isBlocked: (p: SubPoint) => boolean;
 	}) {
-		const range = 2;
+		const range = 4; // 2 tiles * 2 sub-tiles
 		const target = {
 			x: Math.max(
-				1,
+				0,
 				Math.min(
-					casino.width - 2,
-					this.data.position.x + (Math.floor(Math.random() * (range * 2 + 1)) - range),
+					casino.width * 2 - 1,
+					this.data.position.x +
+						(Math.floor(Math.random() * (range * 2 + 1)) - range),
 				),
 			),
 			y: Math.max(
-				1,
+				0,
 				Math.min(
-					casino.height - 2,
-					this.data.position.y + (Math.floor(Math.random() * (range * 2 + 1)) - range),
+					casino.height * 2 - 1,
+					this.data.position.y +
+						(Math.floor(Math.random() * (range * 2 + 1)) - range),
 				),
 			),
 		};
@@ -86,16 +91,20 @@ export class Guest {
 			this.data.path = Pathfinder.findPath(
 				this.data.position,
 				target,
-				casino.width,
-				casino.height,
+				casino.width * 2,
+				casino.height * 2,
 				casino.isBlocked,
 			);
 		}
 	}
 
 	public decide(
-		availableObjects: any[],
-		casino: { width: number; height: number; isBlocked: (p: Point) => boolean },
+		availableObjects: GameObject[],
+		casino: {
+			width: number;
+			height: number;
+			isBlocked: (p: SubPoint) => boolean;
+		},
 	): string | null {
 		if (this.data.isLeaving || this.data.cash <= 0) return null;
 
@@ -105,9 +114,9 @@ export class Guest {
 				obj,
 				path: Pathfinder.findPath(
 					this.data.position,
-					obj.chairPosition,
-					casino.width,
-					casino.height,
+					obj.chairSubTiles[0], // Target the first sub-tile of the chair
+					casino.width * 2,
+					casino.height * 2,
 					casino.isBlocked,
 				),
 			}))

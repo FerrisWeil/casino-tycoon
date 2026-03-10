@@ -1,0 +1,160 @@
+.container {
+	width: 100vw;
+	height: 100vh;
+	background: #0a0a0a;
+	color: #eee;
+	display: flex;
+	flex-direction: column;
+	font-family: "Courier New", monospace;
+	overflow: hidden;
+}
+
+.header {
+	padding: 2rem;
+	background: #111;
+	border-bottom: 4px solid #333;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.titleGroup h1 {
+	margin: 0;
+	font-size: 1.5rem;
+	color: #ffd700;
+}
+.titleGroup p {
+	margin: 0.5rem 0 0;
+	font-size: 0.8rem;
+	opacity: 0.5;
+}
+
+.controls {
+	display: flex;
+	gap: 1rem;
+	align-items: center;
+}
+
+.searchBar {
+	background: #000;
+	border: 4px solid #444;
+	padding: 0.5rem 1rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.searchBar input {
+	background: transparent;
+	border: none;
+	color: #fff;
+	outline: none;
+}
+
+.actionBtn {
+	background: #222;
+	border: 4px solid #444;
+	color: #aaa;
+	font-size: 0.75rem;
+	padding: 0.5rem 1rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.list {
+	flex: 1;
+	overflow-y: auto;
+	padding: 2rem;
+	display: flex;
+	flex-direction: column;
+	gap: 1.5rem; /* Increased gap */
+}
+
+.entry {
+	background: #151515;
+	border: 4px solid #333;
+	display: flex;
+	flex-direction: column;
+}
+
+.entryHeader {
+	padding: 1.25rem;
+	background: #1a1a1a;
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+	cursor: pointer;
+	user-select: none;
+}
+
+.categoryBadge {
+	font-size: 0.6rem;
+	background: #333;
+	padding: 4px 8px;
+	text-transform: uppercase;
+}
+
+.entryTitle {
+	font-weight: bold;
+	flex: 1;
+	font-size: 1.1rem;
+}
+.scaleInfo {
+	font-size: 0.7rem;
+	opacity: 0.4;
+}
+
+.entryContent {
+	padding: 2rem;
+	border-top: 2px solid #222;
+	background: #121212;
+}
+
+.description {
+	font-size: 0.9rem;
+	opacity: 0.7;
+	margin-bottom: 2rem;
+}
+
+.variantGrid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+	gap: 2.5rem;
+}
+
+.variantCard {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1rem;
+}
+
+/* 1m x 1m Square Grid Scale */
+.checkerboard {
+	width: 128px;
+	height: 128px;
+	background-color: #111;
+	background-image:
+		linear-gradient(#1a1a1a 2px, transparent 2px),
+		linear-gradient(90deg, #1a1a1a 2px, transparent 2px);
+	background-size: 32px 32px; /* 1 Meter squares */
+	border: 4px solid #222;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	position: relative;
+}
+
+.spriteWrapper {
+	image-rendering: pixelated;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.variantLabel {
+	font-size: 0.75rem;
+	color: #aaa;
+	font-weight: bold;
+}

@@ -1,14 +1,7 @@
-import {
-	AlertTriangle,
-	Armchair as ChairIcon,
-	Minus,
-	Plus,
-	RotateCcw,
-	Dices as SlotIcon,
-	User as UserIcon,
-} from "lucide-react";
+import { AlertTriangle, Minus, Plus, RotateCcw } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 import { useGameStore } from "../../store/useGameStore";
+import { ChairSprite, GuestSprite, PokieSprite } from "../Graphics/Sprites";
 import styles from "./CasinoFloor.module.css";
 
 const CasinoFloor: React.FC = () => {
@@ -20,6 +13,7 @@ const CasinoFloor: React.FC = () => {
 		isBuilding,
 		addObject,
 		selectObject,
+		selectedObjectId,
 		selectCustomer,
 		selectedCustomerId,
 		rotateBuild,
@@ -33,30 +27,27 @@ const CasinoFloor: React.FC = () => {
 	} | null>(null);
 
 	const BASE_TILE_SIZE = 32;
+	const SUB_TILE_SIZE = BASE_TILE_SIZE / 2;
 
 	const fitToScreen = React.useCallback(() => {
 		if (!viewportRef.current) return;
 		const padding = 120;
 		const vWidth = viewportRef.current.clientWidth - padding;
 		const vHeight = viewportRef.current.clientHeight - padding;
-		const totalBaseWidth = width * BASE_TILE_SIZE + (width - 1);
-		const totalBaseHeight = height * BASE_TILE_SIZE + (height - 1);
+		const totalBaseWidth = width * BASE_TILE_SIZE;
+		const totalBaseHeight = height * BASE_TILE_SIZE;
 		const scaleX = vWidth / totalBaseWidth;
 		const scaleY = vHeight / totalBaseHeight;
 		setZoom(Math.min(scaleX, scaleY));
 	}, [width, height, setZoom]);
 
 	useEffect(() => {
-		if (zoom === 1.0) {
-			fitToScreen();
-		}
+		if (zoom === 1.0) fitToScreen();
 	}, [fitToScreen, zoom]);
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key.toLowerCase() === "r") {
-				rotateBuild();
-			}
+			if (e.key.toLowerCase() === "r") rotateBuild();
 		};
 		window.addEventListener("keydown", handleKeyDown);
 		return () => window.removeEventListener("keydown", handleKeyDown);
@@ -74,30 +65,31 @@ const CasinoFloor: React.FC = () => {
 		}
 
 		if (occupantId) {
-			selectObject(occupantId);
-			return;
+			const obj = objects.find((o) => o.id === occupantId);
+			const isMachineTile = obj?.position.x === x && obj?.position.y === y;
+
+			if (isMachineTile) {
+				selectObject(occupantId);
+				return;
+			}
 		}
 
-		const guest = guests?.find((g) => g.position.x === x && g.position.y === y);
+		const guest = guests?.find(
+			(g) =>
+				Math.floor(g.position.x / 2) === x &&
+				Math.floor(g.position.y / 2) === y,
+		);
 		if (guest) {
 			selectCustomer(guest.id);
 			return;
 		}
 
+		// Clear selections if clicking empty floor
+		selectObject(null);
 		selectCustomer(null);
 	};
 
 	const selectedGuest = guests?.find((g) => g.id === selectedCustomerId);
-
-	// Ghost Logic
-	const getGhostPositions = (x: number, y: number, rotation: number) => {
-		const chairPos = { x, y };
-		if (rotation === 0) chairPos.y += 1;
-		else if (rotation === 90) chairPos.x -= 1;
-		else if (rotation === 180) chairPos.y -= 1;
-		else if (rotation === 270) chairPos.x += 1;
-		return { machine: { x, y }, chair: chairPos };
-	};
 
 	return (
 		<div className={styles.viewport} ref={viewportRef}>
@@ -117,51 +109,57 @@ const CasinoFloor: React.FC = () => {
 								(o.position.x === x && o.position.y === y) ||
 								(o.chairPosition.x === x && o.chairPosition.y === y),
 						);
-
 						const isMachine = obj?.position.x === x && obj?.position.y === y;
 						const isChair =
 							obj?.chairPosition.x === x && obj?.chairPosition.y === y;
 
-						const isVisible = selectedGuest?.visionTiles.some(
+						const isVisibleByGuest = selectedGuest?.visionTiles.some(
 							(p) => p.x === x && p.y === y,
 						);
 
-						const guestAtTile = guests?.find(
-							(g) => g.position.x === x && g.position.y === y,
-						);
-
-						// Interactable if building, or there is an object/guest here
-						const isInteractable = isBuilding || obj || guestAtTile;
-
-						// Ghost rendering
+						// Ghost Logic
 						let ghostType: "none" | "machine" | "chair" = "none";
 						if (isBuilding && hoveredTile) {
-							const ghost = getGhostPositions(
-								hoveredTile.x,
-								hoveredTile.y,
-								buildRotation,
-							);
-							if (ghost.machine.x === x && ghost.machine.y === y)
+							const chairY =
+								buildRotation === 0
+									? hoveredTile.y + 1
+									: buildRotation === 180
+										? hoveredTile.y - 1
+										: hoveredTile.y;
+							const chairX =
+								buildRotation === 90
+									? hoveredTile.x - 1
+									: buildRotation === 270
+										? hoveredTile.x + 1
+										: hoveredTile.x;
+							if (hoveredTile.x === x && hoveredTile.y === y)
 								ghostType = "machine";
-							else if (ghost.chair.x === x && ghost.chair.y === y)
-								ghostType = "chair";
+							else if (chairX === x && chairY === y) ghostType = "chair";
 						}
+
+						const guestAtTile = guests?.find(
+							(g) =>
+								Math.floor(g.position.x / 2) === x &&
+								Math.floor(g.position.y / 2) === y,
+						);
+
+						const isInteractable = isBuilding || isMachine || guestAtTile;
+						const isSelected = isMachine && obj?.id === selectedObjectId;
 
 						return (
 							<button
 								key={tile.id}
 								type="button"
-								className={`${styles.tile} ${styles[tile.type]} ${isInteractable ? styles.interactable : ""}`}
+								className={`${styles.tile} ${styles[tile.type]} ${isInteractable ? styles.interactable : ""} ${isSelected ? styles.selected : ""}`}
 								style={{
 									width: BASE_TILE_SIZE,
 									height: BASE_TILE_SIZE,
 									position: "relative",
-									backgroundColor: isVisible
+									backgroundColor: isVisibleByGuest
 										? "rgba(255, 255, 0, 0.15)"
 										: undefined,
 								}}
 								aria-label={`Tile ${x},${y}`}
-								data-testid="casino-tile"
 								onClick={() =>
 									handleTileClick(x, y, tile.type, tile.occupantId)
 								}
@@ -170,73 +168,96 @@ const CasinoFloor: React.FC = () => {
 							>
 								{isMachine && (
 									<div style={{ position: "relative" }}>
-										<SlotIcon
-											size={BASE_TILE_SIZE * 0.7}
-											color={obj.isRunning ? "#00ff00" : "#ffd700"}
+										<PokieSprite
+											size={BASE_TILE_SIZE}
+											isRunning={obj.isRunning}
 										/>
 										{obj.isUnreachable && (
-											<div title="Unreachable!">
-												<AlertTriangle
-													size={12}
-													color="#ff4444"
-													style={{ position: "absolute", top: -5, right: -5 }}
-												/>
+											<div style={{ position: "absolute", top: -5, right: -5 }}>
+												<AlertTriangle size={12} color="#ff4444" />
 											</div>
 										)}
 									</div>
 								)}
-								{isChair && (
-									<ChairIcon
-										size={BASE_TILE_SIZE * 0.6}
-										color="#888"
-										style={{ opacity: 0.8 }}
-									/>
-								)}
+								{isChair && <ChairSprite size={BASE_TILE_SIZE} />}
 
 								{/* Ghost Render */}
 								{ghostType === "machine" && (
-									<SlotIcon
-										size={BASE_TILE_SIZE * 0.7}
-										color="rgba(0, 255, 0, 0.4)"
-									/>
+									<div style={{ opacity: 0.4 }}>
+										<PokieSprite size={BASE_TILE_SIZE} />
+									</div>
 								)}
 								{ghostType === "chair" && (
-									<ChairIcon
-										size={BASE_TILE_SIZE * 0.6}
-										color="rgba(255, 255, 255, 0.3)"
-									/>
+									<div style={{ opacity: 0.3 }}>
+										<ChairSprite size={BASE_TILE_SIZE} />
+									</div>
 								)}
 
-								{guestAtTile && (
-									<div key={guestAtTile.id} style={{ position: "absolute" }}>
-										<UserIcon size={BASE_TILE_SIZE * 0.8} color="#44aaff" />
-										{selectedCustomerId === guestAtTile.id && (
-											<div className={styles.customerPopup}>
-												<b>Guest</b>
-												<br />
-												Cash: ${guestAtTile.cash.toFixed(2)}
-												<br />
-												Patience:{" "}
-												<span
-													style={{
-														color:
-															guestAtTile.patience > 60
-																? "#4f4"
-																: guestAtTile.patience > 30
-																	? "#ff0"
-																	: "#f44",
-													}}
-												>
-													{Math.floor(guestAtTile.patience)}%
-												</span>
-											</div>
-										)}
-									</div>
+								{tile.type === "entrance" && (
+									<div
+										style={{
+											width: "4px",
+											height: "100%",
+											background: "#0f0",
+											position: "absolute",
+											left: 0,
+										}}
+									/>
 								)}
 							</button>
 						);
 					}),
 				)}
+
+				{/* High-Fidelity Guest Layer */}
+				{guests?.map((g) => {
+					const patienceColor =
+						g.patience > 60 ? "#4f4" : g.patience > 30 ? "#ff0" : "#f44";
+					const isSelectedGuest = g.id === selectedCustomerId;
+
+					return (
+						<div
+							key={g.id}
+							style={{
+								position: "absolute",
+								left: g.position.x * SUB_TILE_SIZE,
+								top: g.position.y * SUB_TILE_SIZE,
+								width: SUB_TILE_SIZE,
+								height: SUB_TILE_SIZE,
+								transition: "all 0.5s linear",
+								pointerEvents: "none",
+								zIndex: 100,
+								display: "flex",
+								alignItems: "center",
+								justifyContent: "center",
+								// Highlight the specific sub-tile the guest is on if selected
+								background: isSelectedGuest
+									? "rgba(255, 215, 0, 0.2)"
+									: undefined,
+								boxShadow: isSelectedGuest
+									? "0 0 10px var(--pixel-accent)"
+									: undefined,
+							}}
+						>
+							<GuestSprite
+								size={SUB_TILE_SIZE}
+								color={g.id.includes("guest-a") ? "#ff4444" : "#44aaff"}
+							/>
+							{isSelectedGuest && (
+								<div className={styles.customerPopup}>
+									<b>Guest</b>
+									<br />
+									Cash: ${g.cash.toFixed(2)}
+									<br />
+									Patience:{" "}
+									<span style={{ color: patienceColor }}>
+										{Math.floor(g.patience)}%
+									</span>
+								</div>
+							)}
+						</div>
+					);
+				})}
 			</div>
 
 			<div className={styles.controls}>

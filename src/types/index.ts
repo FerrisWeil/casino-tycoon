@@ -6,6 +6,11 @@ export interface Point {
 	y: number;
 }
 
+export interface SubPoint {
+	x: number;
+	y: number;
+}
+
 export interface Tile {
 	id: string;
 	type: TileType;
@@ -24,7 +29,7 @@ export interface PokieSettings {
 	grand: JackpotSettings;
 	major: JackpotSettings;
 	minor: JackpotSettings;
-	mini: JackpotSettings; // Added missing property
+	mini: JackpotSettings;
 	additionalRtp: number;
 }
 
@@ -45,7 +50,9 @@ export interface GameObject {
 	id: string;
 	type: GameObjectType;
 	position: Point;
-	chairPosition: Point;
+	chairPosition: Point; // Restored for logic/tests
+	subTiles: SubPoint[];
+	chairSubTiles: SubPoint[];
 	rotation: number;
 	isRunning: boolean;
 	settings: PokieSettings;
@@ -61,8 +68,8 @@ export interface GuestState {
 	consecutiveLosses: number;
 	targetObjectId?: string;
 	isLeaving: boolean;
-	position: Point;
-	path: Point[];
+	position: SubPoint;
+	path: SubPoint[];
 	visionTiles: Point[];
 }
 

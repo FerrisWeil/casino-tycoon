@@ -1,14 +1,16 @@
-import type { Point } from "../types";
+import type { SubPoint } from "../types";
 
 export class Pathfinder {
 	public static findPath(
-		start: Point,
-		end: Point,
-		gridWidth: number,
-		gridHeight: number,
-		isBlocked: (p: Point) => boolean,
-	): Point[] {
-		const queue: { pos: Point; path: Point[] }[] = [{ pos: start, path: [] }];
+		start: SubPoint,
+		end: SubPoint,
+		gridWidth: number, // Sub-grid width
+		gridHeight: number, // Sub-grid height
+		isBlocked: (p: SubPoint) => boolean,
+	): SubPoint[] {
+		const queue: { pos: SubPoint; path: SubPoint[] }[] = [
+			{ pos: start, path: [] },
+		];
 		const visited = new Set<string>();
 		visited.add(`${start.x},${start.y}`);
 
@@ -42,29 +44,6 @@ export class Pathfinder {
 			}
 		}
 
-		return []; // No path found
-	}
-
-	public static getVision(
-		start: Point,
-		range: number,
-		gridWidth: number,
-		gridHeight: number,
-		_isOpaque: (p: Point) => boolean,
-	): Point[] {
-		const visible: Point[] = [];
-		// Simple Diamond/Square vision for now
-		for (let dy = -range; dy <= range; dy++) {
-			for (let dx = -range; dx <= range; dx++) {
-				const p = { x: start.x + dx, y: start.y + dy };
-				if (p.x >= 0 && p.x < gridWidth && p.y >= 0 && p.y < gridHeight) {
-					// In a real LOS we'd raycast, for now simple range
-					if (Math.abs(dx) + Math.abs(dy) <= range) {
-						visible.push(p);
-					}
-				}
-			}
-		}
-		return visible;
+		return [];
 	}
 }

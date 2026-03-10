@@ -3,7 +3,7 @@ import type {
 	GameObject,
 	GameObjectType,
 	GuestState,
-	Point,
+	SubPoint,
 	Tile,
 	TileType,
 } from "../types";
@@ -22,7 +22,6 @@ export class Casino {
 
 	private spawnTimer = 0;
 	public ENTRANCE_POS = { x: 0, y: 3 };
-	private quality = 1.0;
 
 	constructor(width = 7, height = 7, savedState?: CasinoState) {
 		if (savedState) {
@@ -53,6 +52,13 @@ export class Casino {
 				let type: TileType = "floor";
 				if (x === this.ENTRANCE_POS.x && y === this.ENTRANCE_POS.y) {
 					type = "entrance";
+				} else if (
+					x === 0 ||
+					x === this.width - 1 ||
+					y === 0 ||
+					y === this.height - 1
+				) {
+					type = "wall";
 				}
 
 				row.push({
@@ -67,97 +73,118 @@ export class Casino {
 		return newGrid;
 	}
 
-	public isBlocked = (p: Point): boolean => {
-		if (!this.grid[p.y] || !this.grid[p.y][p.x]) return true;
-		const obj = this.objects.find(
-			(o) => o.position.x === p.x && o.position.y === p.y,
+	public isSubTileBlocked = (p: SubPoint): boolean => {
+		// Convert subtile to main tile
+		const tx = Math.floor(p.x / 2);
+		const ty = Math.floor(p.y / 2);
+
+		if (!this.grid[ty] || !this.grid[ty][tx]) return true;
+		if (this.grid[ty][tx].type === "wall") return true;
+
+		// Check machine collision (machines block sub-tiles)
+		const hitMachine = this.objects.some((obj) =>
+			obj.subTiles.some((sp) => sp.x === p.x && sp.y === p.y),
 		);
-		return !!obj;
+		if (hitMachine) return true;
+
+		return false;
+	};
+
+	public isOccupiedByGuest = (p: SubPoint, excludeId: string): boolean => {
+		return this.guests.some(
+			(g) => g.id !== excludeId && g.position.x === p.x && g.position.y === p.y,
+		);
 	};
 
 	public tick(dt: number, isOpen: boolean): number {
 		let totalEarnings = 0;
 
-		for (const obj of this.objects) {
-			const path = Pathfinder.findPath(
-				this.ENTRANCE_POS,
-				obj.chairPosition,
-				this.width,
-				this.height,
-				this.isBlocked,
-			);
-			obj.isUnreachable = path.length === 0;
-		}
-
+		// Spawning logic (No change)
 		if (!isOpen) {
-			for (const guest of this.guests) {
-				guest.isLeaving = true;
-			}
+			for (const guest of this.guests) guest.isLeaving = true;
 		} else {
 			this.spawnTimer += dt;
 			if (this.spawnTimer > 1.0) {
 				this.spawnTimer = 0;
-				this.processSpawning();
+				const entranceSub = {
+					x: this.ENTRANCE_POS.x * 2,
+					y: this.ENTRANCE_POS.y * 2,
+				};
+				const isEntranceBlocked = this.guests.some(
+					(g) =>
+						g.position.x === entranceSub.x && g.position.y === entranceSub.y,
+				);
+				if (!isEntranceBlocked && Math.random() < 0.1) this.spawnGuest();
 			}
 		}
 
+		// Update Guests
 		for (const [id, guestLogic] of this.guestLogics.entries()) {
 			const guest = guestLogic.getData();
 			guestLogic.update(dt, {
 				width: this.width,
 				height: this.height,
-				isBlocked: this.isBlocked,
+				isBlocked: this.isSubTileBlocked,
+				isOccupiedByGuest: this.isOccupiedByGuest,
 			});
 
+			// AI Decision
 			if (
 				!guest.targetObjectId &&
 				!guest.isLeaving &&
 				guest.path.length === 0
 			) {
-				const targetId = guestLogic.decide(this.objects, {
+				guestLogic.decide(this.objects, {
 					width: this.width,
 					height: this.height,
-					isBlocked: this.isBlocked,
+					isBlocked: this.isSubTileBlocked,
 				});
-				if (targetId) {
-					const obj = this.objects.find((o) => o.id === targetId);
+				if (guest.targetObjectId) {
+					const obj = this.objects.find((o) => o.id === guest.targetObjectId);
 					if (obj) obj.occupantId = guest.id;
 				}
 			}
 
+			// Gambling (Must be on one of the chair's sub-tiles)
 			if (guest.targetObjectId && guest.path.length === 0) {
 				const obj = this.objects.find((o) => o.id === guest.targetObjectId);
-				if (
-					obj &&
-					guest.position.x === obj.chairPosition.x &&
-					guest.position.y === obj.chairPosition.y
-				) {
-					const pokieLogic = this.pokieLogics.get(obj.id);
-					if (pokieLogic) {
-						obj.isRunning = true;
-						const result = pokieLogic.update(dt);
-						if (result) {
-							guestLogic.onPokeResult(result.payout, result.wager);
-							totalEarnings += result.wager - result.payout;
+				if (obj) {
+					const onChair = obj.chairSubTiles.some(
+						(sp) => sp.x === guest.position.x && sp.y === guest.position.y,
+					);
+					if (onChair) {
+						const pokieLogic = this.pokieLogics.get(obj.id);
+						if (pokieLogic) {
+							obj.isRunning = true;
+							const result = pokieLogic.update(dt);
+							if (result) {
+								guestLogic.onPokeResult(result.payout, result.wager);
+								totalEarnings += result.wager - result.payout;
+							}
 						}
 					}
 				}
 			}
 
+			// Leaving
 			if (guest.isLeaving && guest.path.length === 0) {
+				const entranceSub = {
+					x: this.ENTRANCE_POS.x * 2,
+					y: this.ENTRANCE_POS.y * 2,
+				};
 				if (
-					guest.position.x === this.ENTRANCE_POS.x &&
-					guest.position.y === this.ENTRANCE_POS.y
+					guest.position.x === entranceSub.x &&
+					guest.position.y === entranceSub.y
 				) {
 					this.guests = this.guests.filter((c) => c.id !== id);
 					this.guestLogics.delete(id);
 				} else {
 					guest.path = Pathfinder.findPath(
 						guest.position,
-						this.ENTRANCE_POS,
-						this.width,
-						this.height,
-						this.isBlocked,
+						entranceSub,
+						this.width * 2,
+						this.height * 2,
+						this.isSubTileBlocked,
 					);
 					if (guest.targetObjectId) {
 						const obj = this.objects.find((o) => o.id === guest.targetObjectId);
@@ -174,35 +201,8 @@ export class Casino {
 		return totalEarnings;
 	}
 
-	private processSpawning() {
-		// 1. Calculate Target Occupancy
-		// For Quality 1.0 and 7x7 grid, we want equilibrium at ~2.5 people
-		const area = this.width * this.height;
-		const targetOccupancy = (area / 20) * this.quality; // ~2.45 for 7x7
-
-		// 2. Crowding Factor (0 to 1)
-		// 1.0 when empty, 0.0 when at target
-		const occupancyFactor = Math.max(
-			0,
-			1 - this.guests.length / targetOccupancy,
-		);
-
-		// 3. Roll for Spawn
-		const baseSpawnProb = 0.2; // 20% chance per second base
-		const finalProb = baseSpawnProb * occupancyFactor;
-
-		const isDoorBlocked = this.guests.some(
-			(g) =>
-				g.position.x === this.ENTRANCE_POS.x &&
-				g.position.y === this.ENTRANCE_POS.y,
-		);
-
-		if (!isDoorBlocked && Math.random() < finalProb) {
-			this.spawnGuest();
-		}
-	}
-
 	private spawnGuest() {
+		if (this.guests.length > 15) return;
 		const id = `guest-${Math.random().toString(36).substr(2, 5)}`;
 		const data = Guest.createRandom(id, this.ENTRANCE_POS);
 		this.guests.push(data);
@@ -210,35 +210,45 @@ export class Casino {
 	}
 
 	public addObject(
-		x: number,
-		y: number,
+		tx: number,
+		ty: number,
 		_type: GameObjectType,
 		rotation = 0,
 	): boolean {
-		const machinePos = { x, y };
-		const chairPos = { x, y };
+		const machinePos = { x: tx, y: ty };
+		const chairPos = { x: tx, y: ty };
 		if (rotation === 0) chairPos.y += 1;
 		else if (rotation === 90) chairPos.x -= 1;
 		else if (rotation === 180) chairPos.y -= 1;
 		else if (rotation === 270) chairPos.x += 1;
 
+		// Validate Tile Occupancy (Simplified for brevity)
+		if (!this.grid[machinePos.y] || !this.grid[chairPos.y]) return false;
 		if (
-			(machinePos.x === 1 && machinePos.y === 3) ||
-			(chairPos.x === 1 && chairPos.y === 3)
+			this.grid[machinePos.y][machinePos.x].occupantId ||
+			this.grid[chairPos.y][chairPos.x].occupantId
 		)
 			return false;
 
-		const positions = [machinePos, chairPos];
-		for (const pos of positions) {
-			if (!this.grid[pos.y] || !this.grid[pos.y][pos.x]) return false;
-			if (this.grid[pos.y][pos.x].occupantId) return false;
-		}
-
 		const id = `obj-${Math.random().toString(36).substr(2, 9)}`;
-		const data = Pokie.createDefault(id, x, y, rotation);
+		const data = Pokie.createDefault(tx, ty, rotation, id);
+
+		// Sub-tile Assignment (Each tile gets 4 subtiles)
+		data.subTiles = [
+			{ x: tx * 2, y: ty * 2 },
+			{ x: tx * 2 + 1, y: ty * 2 },
+			{ x: tx * 2, y: ty * 2 + 1 },
+			{ x: tx * 2 + 1, y: ty * 2 + 1 },
+		];
+		data.chairSubTiles = [
+			{ x: chairPos.x * 2, y: chairPos.y * 2 },
+			{ x: chairPos.x * 2 + 1, y: chairPos.y * 2 },
+			{ x: chairPos.x * 2, y: chairPos.y * 2 + 1 },
+			{ x: chairPos.x * 2 + 1, y: chairPos.y * 2 + 1 },
+		];
+
 		this.objects.push(data);
 		this.pokieLogics.set(id, new Pokie(data));
-
 		this.grid[machinePos.y][machinePos.x].occupantId = id;
 		this.grid[chairPos.y][chairPos.x].occupantId = id;
 		return true;

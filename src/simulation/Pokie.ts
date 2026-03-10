@@ -2,13 +2,13 @@ import type { GameObject } from "../types";
 
 export class Pokie {
 	public static createDefault(
-		id: string,
-		x: number,
-		y: number,
+		tx: number,
+		ty: number,
 		rotation = 0,
+		id: string,
 	): GameObject {
-		let chairX = x;
-		let chairY = y;
+		let chairX = tx;
+		let chairY = ty;
 
 		switch (rotation) {
 			case 0:
@@ -28,14 +28,15 @@ export class Pokie {
 		return {
 			id,
 			type: "pokie-basic",
-			position: { x, y },
+			position: { x: tx, y: ty },
 			chairPosition: { x: chairX, y: chairY },
+			subTiles: [], // Assigned by Casino
+			chairSubTiles: [], // Assigned by Casino
 			rotation,
 			isRunning: false,
 			settings: {
 				pokeInterval: 1.0,
 				wager: 1.0,
-				// These are now MULTIPLIERS (e.g. 5000x bet)
 				grand: { size: 5000, chance: 0.00001 },
 				major: { size: 500, chance: 0.0001 },
 				minor: { size: 50, chance: 0.001 },
@@ -77,7 +78,6 @@ export class Pokie {
 		let payoutMultiplier = 0;
 		const roll = Math.random();
 
-		// 1. Check Jackpots (Rolling for Multiplier)
 		if (roll < s.grand.chance) payoutMultiplier = s.grand.size;
 		else if (roll < s.grand.chance + s.major.chance)
 			payoutMultiplier = s.major.size;
@@ -89,21 +89,15 @@ export class Pokie {
 		)
 			payoutMultiplier = s.mini.size;
 		else {
-			// 2. Additional RTP (also essentially a multiplier pool)
 			if (Math.random() < 0.2) {
-				// The average payout here should be AdditionalRtp * Wager
-				// So the multiplier average is just AdditionalRtp
 				payoutMultiplier = (s.additionalRtp / 0.2) * (0.5 + Math.random());
 			}
 		}
 
 		const actualPayout = payoutMultiplier * wager;
-
-		// Update Stats
 		this.data.stats.pokesCount++;
 		this.data.stats.totalWagered += wager;
 		this.data.stats.totalPaid += actualPayout;
-
 		this.data.stats.history.push({ payout: actualPayout, wager });
 		if (this.data.stats.history.length > 100) this.data.stats.history.shift();
 
